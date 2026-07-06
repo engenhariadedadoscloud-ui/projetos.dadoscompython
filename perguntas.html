@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MercadoMais S.A. — Perguntas Estratégicas</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:     #f0f2f5;
+      --canvas: #ffffff;
+      --header: #1a1a2e;
+      --text:   #2c3e50;
+      --gray:   #7f8c8d;
+      --border: #dfe3e8;
+      --red:    #e74c3c;
+      --orange: #f39c12;
+      --green:  #27ae60;
+      --blue:   #2980b9;
+      --purple: #8e44ad;
+      --teal:   #1abc9c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+    header {
+      background: var(--header);
+      color: #fff; padding: 18px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 3px 10px rgba(0,0,0,.4);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 38px; height: 38px; background: var(--blue);
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px;
+    }
+    header h1  { font-size: 1.2rem; font-weight: 700; }
+    header .sub{ font-size: .75rem; color: #a8a6a4; margin-top: 3px; }
+    .badge {
+      background: var(--blue); color: #fff;
+      padding: 7px 18px; border-radius: 20px;
+      font-size: .75rem; font-weight: 700; letter-spacing: 1px;
+    }
+
+    .intro {
+      background: #eaf4fb; border-left: 4px solid var(--blue);
+      padding: 12px 32px; font-size: .85rem; color: var(--blue); font-weight: 500;
+    }
+
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 22px 28px; }
+
+    .sec {
+      font-size: .72rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 2px;
+      margin: 28px 0 12px; padding-bottom: 7px;
+      border-bottom: 2px solid var(--header);
+    }
+
+    /* PERGUNTAS GRID */
+    .q-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media(max-width:900px){ .q-grid{ grid-template-columns: 1fr; } }
+
+    .q-card {
+      background: var(--canvas);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      overflow: hidden;
+    }
+    .q-head {
+      padding: 14px 20px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .q-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .9rem; flex-shrink: 0;
+    }
+    .q-title { font-size: .88rem; font-weight: 700; color: #fff; line-height: 1.4; }
+    .q-body  { padding: 16px 20px; }
+
+    .finding {
+      background: #f8f9fa; border-radius: 6px;
+      padding: 10px 14px; margin-bottom: 10px;
+      border-left: 3px solid var(--blue);
+      font-size: .8rem; line-height: 1.5;
+    }
+    .finding strong { color: var(--header); display: block; margin-bottom: 3px; font-size: .78rem; }
+    .finding span   { color: var(--text); }
+
+    .rec {
+      background: #eafaf1; border-radius: 6px;
+      padding: 10px 14px; margin-bottom: 8px;
+      border-left: 3px solid var(--green);
+      font-size: .8rem; line-height: 1.5;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .rec::before { content: '✓'; color: var(--green); font-weight: 800; flex-shrink: 0; }
+
+    .tag {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: .65rem; font-weight: 700; margin-top: 6px; margin-right: 4px;
+    }
+    .tag.dado  { background: #eaf4fb; color: var(--blue); }
+    .tag.critico{ background: #fdedec; color: var(--red); }
+    .tag.rec   { background: #eafaf1; color: var(--green); }
+
+    .metric-row {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .metric {
+      background: var(--canvas); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 14px; text-align: center;
+      min-width: 90px;
+    }
+    .metric .m-val { font-size: 1.2rem; font-weight: 800; }
+    .metric .m-lbl { font-size: .65rem; color: var(--gray); text-transform: uppercase; margin-top: 2px; }
+
+    /* CHARTS */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+    .card {
+      background: var(--canvas); border-radius: 8px;
+      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .card h3 {
+      font-size: .78rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card canvas { max-height: 230px; }
+
+    /* KPI TABLE */
+    .kpi-table {
+      width: 100%; border-collapse: collapse; font-size: .82rem;
+    }
+    .kpi-table th {
+      background: var(--header); color: #fff;
+      padding: 10px 14px; text-align: left; font-size: .75rem;
+      text-transform: uppercase; letter-spacing: .8px;
+    }
+    .kpi-table td {
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+    }
+    .kpi-table tr:hover { background: #f8f9fa; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .dot.red    { background: var(--red); }
+    .dot.orange { background: var(--orange); }
+    .dot.green  { background: var(--green); }
+
+    footer {
+      text-align: center; padding: 18px;
+      font-size: .72rem; color: #aab; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">❓</div>
+    <div>
+      <h1>MercadoMais S.A. — Perguntas Estratégicas</h1>
+      <div class="sub">Respostas baseadas em evidências dos dados &nbsp;|&nbsp; Operação Retomada</div>
+    </div>
+  </div>
+  <div class="badge">📊 ANÁLISE DE DADOS</div>
+</header>
+
+<div class="intro">
+  Cada pergunta foi respondida com base nos dados reais analisados. Hipóteses foram formuladas, validadas e transformadas em recomendações fundamentadas.
+</div>
+
+<div class="wrap">
+
+  <div class="sec">Perguntas Estratégicas e Respostas Baseadas em Evidências</div>
+  <div class="q-grid">
+
+    <!-- P1 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#c0392b">
+        <div class="q-num">1</div>
+        <div class="q-title">Por que os lucros diminuíram?</div>
+      </div>
+      <div class="q-body">
+        <div class="metric-row">
+          <div class="metric"><div class="m-val" style="color:var(--red)">28%</div><div class="m-lbl">Cancelamentos</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">33%</div><div class="m-lbl">Devoluções</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">−98%</div><div class="m-lbl">ROI Campanhas</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">R$3.9k</div><div class="m-lbl">Déficit Log.</div></div>
+        </div>
+        <div class="finding">
+          <strong>Receita comprometida por cancelamentos e devoluções</strong>
+          <span>61% dos pedidos não resultam em venda efetivada (28% cancelados + 33% devolvidos). A receita efetiva é apenas R$ 132.312 — fração do potencial total.</span>
+        </div>
+        <div class="finding">
+          <strong>Despesa de marketing sem retorno</strong>
+          <span>Todas as 10 campanhas têm ROI negativo (média −98,2%). O investimento em marketing representa custo puro sem geração de receita compensatória.</span>
+        </div>
+        <div class="finding">
+          <strong>Custos logísticos superiores ao frete cobrado</strong>
+          <span>Déficit de R$ 3.899 entre custo real de entrega e o frete repassado ao cliente. Cada entrega representa prejuízo operacional.</span>
+        </div>
+        <div class="rec">Revisão imediata da política de preços de frete e renegociação com transportadoras.</div>
+        <div class="rec">Suspender campanhas com ROI abaixo de −90% e redirecionar verba.</div>
+        <span class="tag critico">Alta Prioridade</span><span class="tag dado">Financeiro</span>
+      </div>
+    </div>
+
+    <!-- P2 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#e67e22">
+        <div class="q-num">2</div>
+        <div class="q-title">Quais fatores explicam a queda nas vendas?</div>
+      </div>
+      <div class="q-body">
+        <div class="metric-row">
+          <div class="metric"><div class="m-val" style="color:var(--orange)">PR+PE</div><div class="m-lbl">48% da receita</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--orange)">5,8</div><div class="m-lbl">Satisfação</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">SC</div><div class="m-lbl">Menor receita</div></div>
+        </div>
+        <div class="finding">
+          <strong>Concentração geográfica com lacunas regionais</strong>
+          <span>PR e PE concentram 48% da receita. SC, GO e RS têm baixo volume — indicando subexploração ou problemas locais de entrega e satisfação.</span>
+        </div>
+        <div class="finding">
+          <strong>Baixa conversão das campanhas impede captação</strong>
+          <span>Com ROI de −98%, as campanhas não conseguem atrair nem converter clientes. O custo de aquisição cresce sem contrapartida de vendas.</span>
+        </div>
+        <div class="finding">
+          <strong>Satisfação baixa reduz recompra</strong>
+          <span>Score de 5,8/10 combinado com 45% de reclamações não resolvidas afasta clientes recorrentes — principal fonte de receita estável.</span>
+        </div>
+        <div class="rec">Investir em PR e PE onde há demanda comprovada e expandir para CE e RJ.</div>
+        <div class="rec">Criar programa de recompra para clientes do segmento "Potencial" (4 clientes).</div>
+        <span class="tag dado">Comercial</span><span class="tag dado">Regional</span>
+      </div>
+    </div>
+
+    <!-- P3 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#8e44ad">
+        <div class="q-num">3</div>
+        <div class="q-title">Existem perfis com maior risco de abandono?</div>
+      </div>
+      <div class="q-body">
+        <div class="metric-row">
+          <div class="metric"><div class="m-val" style="color:var(--purple)">14</div><div class="m-lbl">Baixo Engajamento</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--purple)">R$5.4k</div><div class="m-lbl">Ticket Médio</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--green)">1</div><div class="m-lbl">Alto Valor</div></div>
+        </div>
+        <div class="finding">
+          <strong>Segmento "Baixo Engajamento" — maior risco imediato</strong>
+          <span>14 clientes com baixa frequência, alta recência e ticket médio R$ 5.429. São 74% da base ativa com alto risco de não recomprar.</span>
+        </div>
+        <div class="finding">
+          <strong>Segmento "Potencial" — risco médio com oportunidade</strong>
+          <span>4 clientes com ticket médio R$ 8.560 e frequência moderada. Necessitam de ativação antes de migrar para "Baixo Engajamento".</span>
+        </div>
+        <div class="finding">
+          <strong>Correlação entre reclamações e abandono</strong>
+          <span>Clientes com reclamações não resolvidas têm alta probabilidade de não retornar. A taxa de 45% sem resolução é crítica para retenção.</span>
+        </div>
+        <div class="rec">Criar régua de comunicação personalizada para o segmento "Baixo Engajamento".</div>
+        <div class="rec">Priorizar resolução de reclamações dos segmentos "Potencial" e "Alto Valor".</div>
+        <span class="tag dado">Segmentação K-Means</span><span class="tag critico">Retenção</span>
+      </div>
+    </div>
+
+    <!-- P4 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#2980b9">
+        <div class="q-num">4</div>
+        <div class="q-title">Quais campanhas apresentam maior retorno?</div>
+      </div>
+      <div class="q-body">
+        <div class="metric-row">
+          <div class="metric"><div class="m-val" style="color:var(--red)">−95%</div><div class="m-lbl">Melhor ROI (Natal)</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">−100%</div><div class="m-lbl">Pior ROI (BF)</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">10/10</div><div class="m-lbl">Camp. negativas</div></div>
+        </div>
+        <div class="finding">
+          <strong>Nenhuma campanha apresenta ROI positivo</strong>
+          <span>Todas as 10 campanhas analisadas têm retorno negativo. A "melhor" campanha (Natal, −95,3%) ainda representa perda maciça de investimento.</span>
+        </div>
+        <div class="finding">
+          <strong>Black Friday e Aniversário: ROI de −100%</strong>
+          <span>As duas campanhas com maior expectativa de volume geraram zero receita atribuída, consumindo todo o investimento sem conversão.</span>
+        </div>
+        <div class="finding">
+          <strong>Problema estrutural na estratégia de marketing</strong>
+          <span>O problema não é uma campanha específica — é a ausência de segmentação, personalização e mensuração adequada de conversão.</span>
+        </div>
+        <div class="rec">Suspender todas as campanhas e realizar auditoria completa de atribuição.</div>
+        <div class="rec">Redesenhar campanhas com segmentação por cluster (Alto Valor, Potencial, Baixo Engajamento).</div>
+        <div class="rec">Testar campanhas A/B com metas de ROI mínimo de +20%.</div>
+        <span class="tag critico">Urgente</span><span class="tag dado">Marketing</span>
+      </div>
+    </div>
+
+    <!-- P5 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#27ae60">
+        <div class="q-num">5</div>
+        <div class="q-title">Como reduzir os custos logísticos?</div>
+      </div>
+      <div class="q-body">
+        <div class="metric-row">
+          <div class="metric"><div class="m-val" style="color:var(--green)">Loggi</div><div class="m-lbl">Menor custo R$70</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">Tx.Express</div><div class="m-lbl">Maior custo R$89</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">R$3.9k</div><div class="m-lbl">Déficit total</div></div>
+        </div>
+        <div class="finding">
+          <strong>Total Express tem o maior déficit individual</strong>
+          <span>Custo médio R$ 89,22 vs frete cobrado R$ 36,79. Déficit médio de R$ 52,43 por entrega — o pior índice entre todas as transportadoras.</span>
+        </div>
+        <div class="finding">
+          <strong>Loggi é a transportadora mais eficiente</strong>
+          <span>Custo médio de R$ 70,58 — o menor entre todas. Menor déficit por entrega (R$ 32,16). Concentrar volume nessa transportadora reduz custos imediatamente.</span>
+        </div>
+        <div class="finding">
+          <strong>Frete cobrado ao cliente está desatualizado</strong>
+          <span>Em todas as transportadoras o custo operacional supera o frete repassado. A tabela de frete precisa ser revisada ou subsidiada estrategicamente.</span>
+        </div>
+        <div class="rec">Migrar volume da Total Express para Loggi no curto prazo.</div>
+        <div class="rec">Revisar tabela de frete para cobrir pelo menos 80% do custo operacional.</div>
+        <div class="rec">Avaliar fulfillment próprio em PR e PE (maiores mercados).</div>
+        <span class="tag dado">Logística</span><span class="tag rec">Economia imediata</span>
+      </div>
+    </div>
+
+    <!-- P6 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#1abc9c">
+        <div class="q-num">6</div>
+        <div class="q-title">É possível prever a demanda por região?</div>
+      </div>
+      <div class="q-body">
+        <div class="metric-row">
+          <div class="metric"><div class="m-val" style="color:var(--teal)">Sim</div><div class="m-lbl">Modelo validado</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--teal)">4</div><div class="m-lbl">Variáveis usadas</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--teal)">PR/PE</div><div class="m-lbl">Regiões prioritárias</div></div>
+        </div>
+        <div class="finding">
+          <strong>Modelo de Regressão Linear desenvolvido e validado</strong>
+          <span>Usando variáveis temporais (mês, trimestre, número sequencial, lag-1) foi possível construir um modelo de previsão mensal de receita com resultados promissores no conjunto de treino.</span>
+        </div>
+        <div class="finding">
+          <strong>PR e PE: regiões com maior volume e previsibilidade</strong>
+          <span>Os dois estados juntos respondem por 48% da receita total, tornando-os os melhores candidatos para previsão de demanda e planejamento de estoque localizado.</span>
+        </div>
+        <div class="finding">
+          <strong>Sazonalidade identificada nos dados</strong>
+          <span>Picos de receita em março/24 (R$ 22k) e maio/23 (R$ 14,5k) sugerem padrões sazonais exploráveis com mais dados históricos.</span>
+        </div>
+        <div class="rec">Implantar o modelo em produção com atualização mensal dos dados.</div>
+        <div class="rec">Com mais histórico, evoluir para modelo por estado — iniciando por PR e PE.</div>
+        <span class="tag dado">Machine Learning</span><span class="tag rec">Planejamento</span>
+      </div>
+    </div>
+
+    <!-- P7 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#e74c3c">
+        <div class="q-num">7</div>
+        <div class="q-title">Como melhorar a experiência do cliente?</div>
+      </div>
+      <div class="q-body">
+        <div class="metric-row">
+          <div class="metric"><div class="m-val" style="color:var(--red)">5,8/10</div><div class="m-lbl">Satisfação atual</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--red)">45%</div><div class="m-lbl">Recl. abertas</div></div>
+          <div class="metric"><div class="m-val" style="color:var(--orange)">7</div><div class="m-lbl">Prod. Errado (top)</div></div>
+        </div>
+        <div class="finding">
+          <strong>"Produto Errado" é a maior fonte de insatisfação</strong>
+          <span>7 ocorrências registradas — a categoria mais frequente. Indica falha no processo de separação ou na descrição de produtos no catálogo.</span>
+        </div>
+        <div class="finding">
+          <strong>45% das reclamações permanecem abertas</strong>
+          <span>Alta taxa de reclamações não resolvidas alimenta insatisfação. Clientes críticos com problemas em aberto são os mais propensos ao abandono.</span>
+        </div>
+        <div class="finding">
+          <strong>Atrasos frequentes impactam percepção de qualidade</strong>
+          <span>Todas as transportadoras registram atrasos. Total Express e Correios têm os maiores custos e pior desempenho combinado.</span>
+        </div>
+        <div class="rec">Força-tarefa para resolver 100% das reclamações abertas em 30 dias.</div>
+        <div class="rec">Auditoria no processo de separação de pedidos para eliminar "Produto Errado".</div>
+        <div class="rec">Implementar pesquisa de satisfação pós-entrega (NPS) com acompanhamento semanal.</div>
+        <span class="tag critico">Urgente</span><span class="tag dado">Atendimento</span>
+      </div>
+    </div>
+
+    <!-- P8 -->
+    <div class="q-card">
+      <div class="q-head" style="background:#2c3e50">
+        <div class="q-num">8</div>
+        <div class="q-title">Quais indicadores a diretoria deve acompanhar?</div>
+      </div>
+      <div class="q-body">
+        <table class="kpi-table">
+          <tr>
+            <th>Indicador</th>
+            <th>Atual</th>
+            <th>Meta</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>Taxa de Cancelamento</td>
+            <td><strong>28,0%</strong></td>
+            <td>10,0%</td>
+            <td><span class="dot red"></span>Crítico</td>
+          </tr>
+          <tr>
+            <td>Taxa de Devolução</td>
+            <td><strong>33,0%</strong></td>
+            <td>12,0%</td>
+            <td><span class="dot red"></span>Crítico</td>
+          </tr>
+          <tr>
+            <td>ROI Médio de Campanhas</td>
+            <td><strong>−98,2%</strong></td>
+            <td>+25,0%</td>
+            <td><span class="dot red"></span>Crítico</td>
+          </tr>
+          <tr>
+            <td>Déficit Logístico Total</td>
+            <td><strong>R$ 3.899</strong></td>
+            <td>R$ 0</td>
+            <td><span class="dot red"></span>Crítico</td>
+          </tr>
+          <tr>
+            <td>Satisfação do Cliente</td>
+            <td><strong>5,8 / 10</strong></td>
+            <td>8,0 / 10</td>
+            <td><span class="dot orange"></span>Atenção</td>
+          </tr>
+          <tr>
+            <td>Taxa de Resolução de Reclamações</td>
+            <td><strong>55,0%</strong></td>
+            <td>85,0%</td>
+            <td><span class="dot orange"></span>Atenção</td>
+          </tr>
+          <tr>
+            <td>Ticket Médio (Entregues)</td>
+            <td><strong>R$ 5.513</strong></td>
+            <td>R$ 7.000</td>
+            <td><span class="dot orange"></span>Atenção</td>
+          </tr>
+          <tr>
+            <td>Clientes Alto Valor</td>
+            <td><strong>1 cliente</strong></td>
+            <td>10 clientes</td>
+            <td><span class="dot orange"></span>Atenção</td>
+          </tr>
+          <tr>
+            <td>Receita Efetiva Mensal</td>
+            <td><strong>R$ 7.350 (méd.)</strong></td>
+            <td>R$ 16.000</td>
+            <td><span class="dot green"></span>Em progresso</td>
+          </tr>
+        </table>
+        <br>
+        <div class="rec">Acompanhar semanalmente: cancelamentos, devoluções e reclamações abertas.</div>
+        <div class="rec">Acompanhar mensalmente: ROI de campanhas, déficit logístico e satisfação.</div>
+        <span class="tag dado">Governança</span><span class="tag rec">KPIs Estratégicos</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Gráficos de suporte -->
+  <div class="sec">Visualizações de Suporte às Respostas</div>
+  <div class="g3">
+    <div class="card">
+      <h3>Segmentação de Clientes (K-Means)</h3>
+      <canvas id="chartSeg"></canvas>
+    </div>
+    <div class="card">
+      <h3>Receita por Estado — Foco Regional</h3>
+      <canvas id="chartRegiao"></canvas>
+    </div>
+    <div class="card">
+      <h3>Status dos Pedidos — Perda de Receita</h3>
+      <canvas id="chartStatus"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  MercadoMais S.A. &bull; Hackathon Operação Retomada &bull; Perguntas Estratégicas &bull; Junho 2026
+</footer>
+
+<script>
+const C = { red:'#e74c3c', orange:'#f39c12', green:'#27ae60', blue:'#2980b9', purple:'#8e44ad', teal:'#1abc9c' };
+
+new Chart(document.getElementById('chartSeg'), {
+  type: 'bar',
+  data: {
+    labels: ['Alto Valor\n(1)','Potencial\n(4)','Baixo Engaj.\n(14)'],
+    datasets: [{
+      label: 'Ticket Médio (R$)',
+      data: [22057, 8560, 5429],
+      backgroundColor: [C.green, C.blue, C.red],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { ticks: { callback: v => 'R$ '+Math.round(v/1000)+'k' } } }
+  }
+});
+
+new Chart(document.getElementById('chartRegiao'), {
+  type: 'bar',
+  data: {
+    labels: ['PR','PE','RJ','SP','MG','RS','GO','SC'],
+    datasets: [{
+      label: 'Receita (R$)',
+      data: [35613,27834,16768,13244,11276,10970,10600,6005],
+      backgroundColor: ['#8e44ad','#8e44ad','#2980b9','#2980b9','rgba(41,128,185,.5)','rgba(41,128,185,.5)','rgba(41,128,185,.4)','rgba(41,128,185,.3)'],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: { callback: v => 'R$'+Math.round(v/1000)+'k' } } }
+  }
+});
+
+new Chart(document.getElementById('chartStatus'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Devolvido','Cancelado','Entregue','Em transporte'],
+    datasets: [{
+      data: [33,28,24,15],
+      backgroundColor: [C.orange, C.red, C.green, C.blue],
+      hoverOffset: 8, borderWidth: 2
+    }]
+  },
+  options: {
+    cutout: '55%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } } }
+  }
+});
+</script>
+</body>
+</html>
