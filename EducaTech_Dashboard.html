@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EducaTech Online — Dashboard Estratégico</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --pbi-bg: #f3f2f1;
+      --pbi-canvas: #ffffff;
+      --pbi-header: #252423;
+      --pbi-accent: #e8b14b;
+      --pbi-red: #d13438;
+      --pbi-blue: #0078d4;
+      --pbi-green: #107c10;
+      --pbi-gray: #605e5c;
+      --pbi-border: #e0e0e0;
+      --pbi-title-text: #ffffff;
+      --pbi-body-text: #323130;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--pbi-bg);
+      color: var(--pbi-body-text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .report-header {
+      background: var(--pbi-header);
+      color: var(--pbi-title-text);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .report-header .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .report-header .brand-icon {
+      width: 32px; height: 32px;
+      background: var(--pbi-accent);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 16px; color: #1a1a1a;
+    }
+    .report-header h1 { font-size: 18px; font-weight: 600; letter-spacing: .3px; }
+    .report-header .subtitle { font-size: 12px; color: #a8a6a4; margin-top: 2px; }
+    .report-header .date-badge {
+      background: rgba(255,255,255,.1);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #cac7c4;
+    }
+
+    /* ── ALERT BANNER ── */
+    .alert-banner {
+      background: #fde7e9;
+      border-left: 4px solid var(--pbi-red);
+      padding: 10px 28px;
+      font-size: 13px;
+      color: var(--pbi-red);
+      font-weight: 600;
+    }
+
+    /* ── LAYOUT ── */
+    .report-body {
+      padding: 20px 28px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--pbi-gray);
+      margin-bottom: 10px;
+      margin-top: 22px;
+      padding-left: 2px;
+      border-left: 3px solid var(--pbi-accent);
+      padding-left: 8px;
+    }
+
+    /* ── KPI CARDS ROW ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background: var(--pbi-canvas);
+      border: 1px solid var(--pbi-border);
+      border-radius: 6px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi-card.red::before   { background: var(--pbi-red); }
+    .kpi-card.blue::before  { background: var(--pbi-blue); }
+    .kpi-card.amber::before { background: var(--pbi-accent); }
+    .kpi-card.green::before { background: var(--pbi-green); }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--pbi-gray);
+      margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .kpi-card.red   .kpi-value { color: var(--pbi-red); }
+    .kpi-card.blue  .kpi-value { color: var(--pbi-blue); }
+    .kpi-card.amber .kpi-value { color: #b8860b; }
+    .kpi-card.green .kpi-value { color: var(--pbi-green); }
+
+    .kpi-delta {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .kpi-delta.down { color: var(--pbi-red); }
+    .kpi-delta.up   { color: var(--pbi-red); }
+    .kpi-sub { font-size: 11px; color: var(--pbi-gray); margin-top: 4px; }
+
+    /* ── CHARTS GRID ── */
+    .charts-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .charts-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .chart-card {
+      background: var(--pbi-canvas);
+      border: 1px solid var(--pbi-border);
+      border-radius: 6px;
+      padding: 18px 20px 14px;
+    }
+    .chart-card.span2 { grid-column: span 2; }
+    .chart-card.span3 { grid-column: span 3; }
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--pbi-body-text);
+      margin-bottom: 2px;
+    }
+    .chart-desc {
+      font-size: 11px;
+      color: var(--pbi-gray);
+      margin-bottom: 14px;
+    }
+    .chart-wrap { position: relative; }
+
+    /* ── INSIGHT CARDS ── */
+    .insight-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .insight-card {
+      background: var(--pbi-canvas);
+      border: 1px solid var(--pbi-border);
+      border-radius: 6px;
+      padding: 18px 20px;
+      border-left: 5px solid var(--pbi-accent);
+    }
+    .insight-card.red  { border-left-color: var(--pbi-red); }
+    .insight-card.blue { border-left-color: var(--pbi-blue); }
+
+    .insight-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: #fff4ce;
+      color: #6b4e00;
+      padding: 2px 8px;
+      border-radius: 2px;
+      margin-bottom: 8px;
+    }
+    .insight-card.red  .insight-tag { background: #fde7e9; color: #a4262c; }
+    .insight-card.blue .insight-tag { background: #deeffe; color: #005a9e; }
+
+    .insight-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .insight-body {
+      font-size: 12px;
+      color: var(--pbi-gray);
+      line-height: 1.6;
+    }
+
+    /* ── RECOMMENDATION TABLE ── */
+    .rec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .rec-table thead tr {
+      background: var(--pbi-header);
+      color: #fff;
+    }
+    .rec-table thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+    .rec-table tbody tr { border-bottom: 1px solid var(--pbi-border); }
+    .rec-table tbody tr:hover { background: #f5f4f3; }
+    .rec-table tbody td { padding: 10px 14px; vertical-align: top; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-red    { background: #fde7e9; color: var(--pbi-red); }
+    .badge-amber  { background: #fff4ce; color: #8a5500; }
+    .badge-green  { background: #dff6dd; color: #107c10; }
+    .badge-blue   { background: #deeffe; color: #005a9e; }
+
+    /* ── WATERFALL MANUAL ── */
+    .waterfall-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 18px;
+      height: 180px;
+      padding: 0 10px;
+      margin-top: 10px;
+    }
+    .wf-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .wf-label { font-size: 11px; color: var(--pbi-gray); margin-top: 6px; text-align: center; }
+    .wf-val { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+
+    /* ── FOOTER ── */
+    .report-footer {
+      background: var(--pbi-header);
+      color: #7a7876;
+      font-size: 11px;
+      padding: 10px 28px;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    /* responsive */
+    @media (max-width: 900px) {
+      .kpi-row, .charts-2col, .charts-3col, .insight-row { grid-template-columns: 1fr 1fr; }
+      .chart-card.span2, .chart-card.span3 { grid-column: span 1; }
+    }
+    @media (max-width: 600px) {
+      .kpi-row, .charts-2col, .charts-3col, .insight-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="report-header">
+  <div class="brand">
+    <div class="brand-icon">ET</div>
+    <div>
+      <h1>EducaTech Online — Análise de Desempenho</h1>
+      <div class="subtitle">Dashboard Estratégico · Hackathon em Análise de Dados · Unifametro</div>
+    </div>
+  </div>
+  <div class="date-badge">Ano de Análise: 2024</div>
+</header>
+
+<!-- ALERT -->
+<div class="alert-banner">
+  ⚠ ALERTA CRÍTICO — Declínio contínuo em todos os indicadores ao longo dos 4 trimestres. Ação imediata requerida.
+</div>
+
+<div class="report-body">
+
+  <!-- KPI CARDS -->
+  <div class="section-label">Indicadores-Chave de Desempenho (KPIs)</div>
+  <div class="kpi-row">
+    <div class="kpi-card red">
+      <div class="kpi-label">Matrículas — 4º Tri</div>
+      <div class="kpi-value">3.900</div>
+      <div class="kpi-delta down">▼ 25% vs 1º Trimestre</div>
+      <div class="kpi-sub">Iniciou o ano com 5.200 matrículas</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Evasão — 4º Tri</div>
+      <div class="kpi-value">22%</div>
+      <div class="kpi-delta up">▲ +12 p.p. vs 1º Trimestre</div>
+      <div class="kpi-sub">Era 10% no início do ano</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Tempo na Plataforma — 4º Tri</div>
+      <div class="kpi-value">9h</div>
+      <div class="kpi-delta down">▼ –50% vs 1º Trimestre</div>
+      <div class="kpi-sub">Eram 18h/mês no 1º trimestre</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Satisfação — 4º Tri</div>
+      <div class="kpi-value">6,8</div>
+      <div class="kpi-delta down">▼ –1,8 pts vs 1º Trimestre</div>
+      <div class="kpi-sub">Nota máxima foi 8,6 no 1º tri</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="section-label">Evolução Trimestral dos Indicadores</div>
+  <div class="charts-2col">
+
+    <!-- Matrículas -->
+    <div class="chart-card">
+      <div class="chart-title">Matrículas por Trimestre</div>
+      <div class="chart-desc">Queda acumulada de 25% ao longo do ano</div>
+      <div class="chart-wrap"><canvas id="chartMatriculas" height="200"></canvas></div>
+    </div>
+
+    <!-- Evasão -->
+    <div class="chart-card">
+      <div class="chart-title">Taxa de Evasão (%)</div>
+      <div class="chart-desc">Crescimento de 120% na evasão em relação ao 1º trimestre</div>
+      <div class="chart-wrap"><canvas id="chartEvasao" height="200"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="charts-2col">
+
+    <!-- Tempo na plataforma -->
+    <div class="chart-card">
+      <div class="chart-title">Tempo Médio na Plataforma (Horas/Mês)</div>
+      <div class="chart-desc">Engajamento caiu pela metade — de 18h para 9h mensais</div>
+      <div class="chart-wrap"><canvas id="chartTempo" height="200"></canvas></div>
+    </div>
+
+    <!-- Satisfação -->
+    <div class="chart-card">
+      <div class="chart-title">Satisfação dos Alunos (Nota Média)</div>
+      <div class="chart-desc">Nota abaixo de 7,0 no último trimestre — zona de risco</div>
+      <div class="chart-wrap"><canvas id="chartSatisfacao" height="200"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- CHART COMBINADO -->
+  <div class="charts-2col" style="margin-bottom:14px;">
+    <div class="chart-card span2">
+      <div class="chart-title">Correlação: Satisfação × Evasão × Engajamento (Visão Consolidada)</div>
+      <div class="chart-desc">Os três indicadores se deterioram de forma simultânea — evidenciando causa comum</div>
+      <div class="chart-wrap"><canvas id="chartCombo" height="120"></canvas></div>
+    </div>
+  </div>
+
+  <!-- RADAR -->
+  <div class="charts-3col">
+    <div class="chart-card">
+      <div class="chart-title">Radar de Saúde Organizacional</div>
+      <div class="chart-desc">1º vs 4º trimestre — degradação em todos os eixos</div>
+      <div class="chart-wrap"><canvas id="chartRadar" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Matrículas Perdidas por Trimestre</div>
+      <div class="chart-desc">Alunos que deixaram de se matricular vs trimestre anterior</div>
+      <div class="chart-wrap"><canvas id="chartPerda" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Distribuição de Alunos Ativos Estimados</div>
+      <div class="chart-desc">Após desconto da evasão acumulada por trimestre</div>
+      <div class="chart-wrap"><canvas id="chartDonuts" height="240"></canvas></div>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="section-label">Insights Estratégicos Identificados</div>
+  <div class="insight-row">
+    <div class="insight-card red">
+      <span class="insight-tag">Insight 1 — Crítico</span>
+      <div class="insight-title">O declínio do engajamento antecede e acelera a evasão</div>
+      <div class="insight-body">
+        O tempo médio na plataforma caiu de 18h para 9h/mês (–50%) enquanto a evasão saltou de 10% para 22% (+120%).
+        A correlação direta indica que alunos desengajados abandonam antes de concluir os cursos.
+        A queda no tempo de uso provavelmente reflete problemas de qualidade de conteúdo ou experiência na plataforma.
+      </div>
+    </div>
+    <div class="insight-card red">
+      <span class="insight-tag">Insight 2 — Crítico</span>
+      <div class="insight-title">A insatisfação está comprometendo a retenção e as novas matrículas</div>
+      <div class="insight-body">
+        A nota de satisfação caiu de 8,6 para 6,8 — uma queda de 21%. Alunos insatisfeitos não renovam, não indicam e
+        reforçam boca-a-boca negativo. Isso cria um ciclo vicioso: menos matrículas novas + maior evasão = queda
+        acelerada de faturamento. Se a tendência persistir, o próximo trimestre pode atingir nota abaixo de 6,0.
+      </div>
+    </div>
+    <div class="insight-card blue">
+      <span class="insight-tag">Insight 3 — Sistêmico</span>
+      <div class="insight-title">Os quatro indicadores se deterioram de forma sincronizada</div>
+      <div class="insight-body">
+        Matrículas, evasão, tempo de uso e satisfação pioraram trimestralmente sem exceção.
+        Esse padrão simultâneo aponta para uma causa raiz sistêmica — provavelmente relacionada à qualidade
+        da plataforma, ao currículo dos cursos ou à experiência do aluno — e não a fatores isolados ou sazonais.
+      </div>
+    </div>
+    <div class="insight-card" style="border-left-color: var(--pbi-accent);">
+      <span class="insight-tag">Insight 4 — Projeção</span>
+      <div class="insight-title">Sem intervenção, a evasão pode superar 30% no 1º trimestre seguinte</div>
+      <div class="insight-body">
+        A tendência linear da evasão (+4 p.p. por trimestre em média) projeta ~26–30% no próximo trimestre.
+        Com matrículas em queda e evasão crescente, a base de alunos ativos cairia abaixo de 2.500 em breve.
+        A janela para intervenção eficaz está se fechando — cada trimestre sem ação aumenta o custo de reversão.
+      </div>
+    </div>
+  </div>
+
+  <!-- RECOMENDAÇÕES -->
+  <div class="section-label">Recomendações Estratégicas</div>
+  <div class="chart-card" style="margin-bottom:14px;">
+    <div class="chart-title">Plano de Ação — Priorizado por Impacto e Urgência</div>
+    <div class="chart-desc">Ações recomendadas para reverter o declínio nos indicadores da EducaTech</div>
+    <table class="rec-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ação Recomendada</th>
+          <th>Impacto Esperado</th>
+          <th>Prazo</th>
+          <th>Prioridade</th>
+          <th>Responsável Sugerido</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Pesquisa de causa raiz com alunos evadidos</strong> — entrevistas e NPS detalhado</td>
+          <td>Identificar o principal driver de insatisfação</td>
+          <td>30 dias</td>
+          <td><span class="badge badge-red">Urgente</span></td>
+          <td>Dir. de Operações</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Programa de retenção ativa</strong> — alertas para alunos com baixo engajamento</td>
+          <td>Reduzir evasão em até 30–40%</td>
+          <td>45 dias</td>
+          <td><span class="badge badge-red">Urgente</span></td>
+          <td>Dir. de Operações</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>Revisão e atualização do catálogo de cursos</strong> — curadoria de conteúdo</td>
+          <td>Aumentar satisfação e tempo de plataforma</td>
+          <td>60 dias</td>
+          <td><span class="badge badge-amber">Alta</span></td>
+          <td>Dir. Executivo</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Melhoria de UX da plataforma</strong> — usabilidade, velocidade e mobile</td>
+          <td>Elevar satisfação e reduzir churn técnico</td>
+          <td>90 dias</td>
+          <td><span class="badge badge-amber">Alta</span></td>
+          <td>Dir. de Operações</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Campanha de reengajamento</strong> — e-mail, push, ofertas para alunos inativos</td>
+          <td>Recuperar parte dos alunos perdidos</td>
+          <td>30 dias</td>
+          <td><span class="badge badge-amber">Alta</span></td>
+          <td>Dir. Financeiro</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>Criação de indicadores de monitoramento mensal</strong> — dashboard contínuo</td>
+          <td>Detectar problemas antes de se tornarem crises</td>
+          <td>45 dias</td>
+          <td><span class="badge badge-blue">Médio</span></td>
+          <td>Dir. Executivo</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CONCLUSÃO -->
+  <div class="section-label">Conclusão Executiva</div>
+  <div class="chart-card" style="border-left: 4px solid var(--pbi-accent); margin-bottom: 10px;">
+    <div class="chart-title" style="margin-bottom:10px;">Narrativa Estratégica — O que está acontecendo com a EducaTech?</div>
+    <div style="font-size:13px; line-height:1.8; color: var(--pbi-body-text);">
+      <p style="margin-bottom:10px;">
+        A EducaTech enfrenta uma <strong>crise de engajamento</strong> que se manifesta em cascata: a experiência dos alunos
+        na plataforma deteriorou ao longo do ano, reduzindo o tempo de uso de 18h para 9h mensais e derrubando a nota de
+        satisfação de 8,6 para 6,8.
+      </p>
+      <p style="margin-bottom:10px;">
+        Como consequência direta, a <strong>evasão mais que dobrou</strong> (10% → 22%) e o número de novas matrículas caiu 25%.
+        Os dados apontam para uma causa raiz sistêmica — muito provavelmente relacionada à qualidade do conteúdo ou da
+        plataforma — e não a fatores externos ou sazonais.
+      </p>
+      <p>
+        <strong>A boa notícia:</strong> os dados fornecem uma janela de intervenção clara. Com ações focadas em retenção,
+        melhoria de conteúdo e experiência do aluno nos próximos 60–90 dias, é possível reverter a tendência antes que
+        os indicadores atinjam níveis irrecuperáveis.
+      </p>
+    </div>
+    <div style="margin-top:14px; padding:12px 16px; background:#fff4ce; border-radius:4px; font-size:12px; color:#6b4e00;">
+      <strong>Reflexão Final:</strong> "Uma boa análise de dados é necessária, mas não suficiente. A forma como os resultados
+      são comunicados pode ser tão decisiva quanto a análise em si — especialmente quando o objetivo é gerar mudança organizacional."
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="report-footer">
+  <span>EducaTech Online · Dashboard Estratégico · Hackathon em Análise de Dados — Unifametro</span>
+  <span>Prof. Felipe Ferreira · Pós-Graduação Lato Sensu · 2024</span>
+</footer>
+
+<!-- ── SCRIPTS ── -->
+<script>
+  const trimestres = ['1º Tri', '2º Tri', '3º Tri', '4º Tri'];
+  const matriculas  = [5200, 4800, 4300, 3900];
+  const evasao      = [10, 12, 17, 22];
+  const horas       = [18, 15, 12, 9];
+  const satisfacao  = [8.6, 8.1, 7.4, 6.8];
+
+  const RED    = '#d13438';
+  const AMBER  = '#e8b14b';
+  const BLUE   = '#0078d4';
+  const GREEN  = '#107c10';
+  const GRAY   = '#605e5c';
+  const LIGHT  = '#f3f2f1';
+
+  const gridOpts = {
+    color: '#e0e0e0',
+    drawBorder: false
+  };
+
+  Chart.defaults.font.family = "'Segoe UI', Tahoma, sans-serif";
+  Chart.defaults.font.size   = 11;
+
+  // ── Matrículas (bar gradient-like) ──
+  const ctxM = document.getElementById('chartMatriculas').getContext('2d');
+  new Chart(ctxM, {
+    type: 'bar',
+    data: {
+      labels: trimestres,
+      datasets: [{
+        label: 'Matrículas',
+        data: matriculas,
+        backgroundColor: ['#0078d4cc','#1890d0cc','#e8b14bcc','#d13438cc'],
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString('pt-BR')} matrículas` }}},
+      scales: {
+        x: { grid: gridOpts },
+        y: { grid: gridOpts, min: 0, max: 6000,
+          ticks: { callback: v => v.toLocaleString('pt-BR') }}
+      }
+    }
+  });
+
+  // ── Evasão (linha) ──
+  const ctxE = document.getElementById('chartEvasao').getContext('2d');
+  new Chart(ctxE, {
+    type: 'line',
+    data: {
+      labels: trimestres,
+      datasets: [{
+        label: 'Evasão (%)',
+        data: evasao,
+        borderColor: RED,
+        backgroundColor: RED + '18',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: RED,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` }}},
+      scales: {
+        x: { grid: gridOpts },
+        y: { grid: gridOpts, min: 0, max: 30,
+          ticks: { callback: v => v + '%' }}
+      }
+    }
+  });
+
+  // ── Tempo ──
+  const ctxT = document.getElementById('chartTempo').getContext('2d');
+  new Chart(ctxT, {
+    type: 'bar',
+    data: {
+      labels: trimestres,
+      datasets: [{
+        label: 'Horas/Mês',
+        data: horas,
+        backgroundColor: [GREEN + 'cc', AMBER + 'cc', AMBER + '99', RED + 'cc'],
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw}h/mês` }}},
+      scales: {
+        x: { grid: gridOpts },
+        y: { grid: gridOpts, min: 0, max: 22,
+          ticks: { callback: v => v + 'h' }}
+      }
+    }
+  });
+
+  // ── Satisfação ──
+  const ctxS = document.getElementById('chartSatisfacao').getContext('2d');
+  new Chart(ctxS, {
+    type: 'line',
+    data: {
+      labels: trimestres,
+      datasets: [{
+        label: 'Nota Média',
+        data: satisfacao,
+        borderColor: BLUE,
+        backgroundColor: BLUE + '18',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: BLUE,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
+      }, {
+        label: 'Zona de Risco (7,0)',
+        data: [7, 7, 7, 7],
+        borderColor: RED,
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: true, position: 'top',
+        labels: { boxWidth: 12, padding: 10, font: { size: 10 }}},
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Zona de Risco (7,0)'
+          ? ' Threshold crítico: 7,0' : ` Nota: ${ctx.raw}` }}},
+      scales: {
+        x: { grid: gridOpts },
+        y: { grid: gridOpts, min: 5, max: 10,
+          ticks: { callback: v => v.toFixed(1) }}
+      }
+    }
+  });
+
+  // ── Combo ──
+  const ctxC = document.getElementById('chartCombo').getContext('2d');
+  new Chart(ctxC, {
+    type: 'line',
+    data: {
+      labels: trimestres,
+      datasets: [
+        {
+          label: 'Satisfação (nota)',
+          data: satisfacao,
+          borderColor: BLUE,
+          backgroundColor: 'transparent',
+          tension: 0.4,
+          pointRadius: 5,
+          borderWidth: 2,
+          yAxisID: 'yLeft',
+        },
+        {
+          label: 'Horas/Mês',
+          data: horas,
+          borderColor: GREEN,
+          backgroundColor: 'transparent',
+          tension: 0.4,
+          pointRadius: 5,
+          borderWidth: 2,
+          yAxisID: 'yLeft',
+        },
+        {
+          label: 'Evasão (%)',
+          data: evasao,
+          borderColor: RED,
+          backgroundColor: RED + '15',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 5,
+          borderWidth: 2,
+          yAxisID: 'yRight',
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: true, position: 'top',
+        labels: { boxWidth: 12, padding: 12, font: { size: 11 }}}},
+      scales: {
+        x: { grid: gridOpts },
+        yLeft:  { grid: gridOpts, position: 'left',  min: 0, max: 25,
+          title: { display: true, text: 'Satisfação / Horas', font: { size: 10 }}},
+        yRight: { grid: { display: false }, position: 'right', min: 0, max: 30,
+          title: { display: true, text: 'Evasão (%)', font: { size: 10 }},
+          ticks: { callback: v => v + '%' }}
+      }
+    }
+  });
+
+  // ── Radar ──
+  const ctxR = document.getElementById('chartRadar').getContext('2d');
+  new Chart(ctxR, {
+    type: 'radar',
+    data: {
+      labels: ['Matrículas\n(mil)', 'Engajamento\n(horas)', 'Satisfação\n(nota)', 'Retenção\n(100-evasão%)'],
+      datasets: [
+        {
+          label: '1º Trimestre',
+          data: [5.2, 18, 8.6, 90],
+          borderColor: BLUE,
+          backgroundColor: BLUE + '25',
+          pointBackgroundColor: BLUE,
+          borderWidth: 2,
+        },
+        {
+          label: '4º Trimestre',
+          data: [3.9, 9, 6.8, 78],
+          borderColor: RED,
+          backgroundColor: RED + '25',
+          pointBackgroundColor: RED,
+          borderWidth: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top',
+        labels: { boxWidth: 12, font: { size: 10 }}}},
+      scales: { r: {
+        min: 0,
+        grid: { color: '#e0e0e0' },
+        ticks: { display: false },
+        pointLabels: { font: { size: 9.5 }}
+      }}
+    }
+  });
+
+  // ── Perda por trimestre (bar) ──
+  const ctxP = document.getElementById('chartPerda').getContext('2d');
+  new Chart(ctxP, {
+    type: 'bar',
+    data: {
+      labels: ['2º Tri', '3º Tri', '4º Tri'],
+      datasets: [{
+        label: 'Matrículas Perdidas',
+        data: [400, 500, 400],
+        backgroundColor: [AMBER + 'cc', RED + 'aa', RED + 'cc'],
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` –${ctx.raw} matrículas` }}},
+      scales: {
+        x: { grid: gridOpts },
+        y: { grid: gridOpts, min: 0, max: 700 }
+      }
+    }
+  });
+
+  // ── Donut (ativos estimados) ──
+  // Ativos = Matrículas × (1 - evasão)
+  const ativos = matriculas.map((m, i) => Math.round(m * (1 - evasao[i] / 100)));
+  const ctxD = document.getElementById('chartDonuts').getContext('2d');
+  new Chart(ctxD, {
+    type: 'doughnut',
+    data: {
+      labels: trimestres,
+      datasets: [{
+        data: ativos,
+        backgroundColor: [BLUE + 'cc', GREEN + 'cc', AMBER + 'cc', RED + 'cc'],
+        hoverOffset: 8,
+        borderWidth: 2,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 10 }}},
+        tooltip: { callbacks: {
+          label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString('pt-BR')} alunos ativos est.`
+        }}
+      },
+      cutout: '62%',
+    }
+  });
+</script>
+</body>
+</html>
