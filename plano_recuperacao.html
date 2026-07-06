@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MercadoMais S.A. — Plano de Recuperação</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:     #f0f2f5;
+      --canvas: #ffffff;
+      --header: #1a1a2e;
+      --text:   #2c3e50;
+      --border: #dfe3e8;
+      --gray:   #7f8c8d;
+
+      --cp:  #e74c3c;  /* curto prazo  — vermelho emergência */
+      --mp:  #f39c12;  /* médio prazo  — laranja melhoria   */
+      --lp:  #27ae60;  /* longo prazo  — verde estratégia   */
+      --blue: #2980b9;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+    /* ── HEADER ──────────────────────────────────────────────── */
+    header {
+      background: var(--header);
+      color: #fff; padding: 16px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 3px 10px rgba(0,0,0,.4);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 36px; height: 36px; background: var(--lp);
+      border-radius: 6px; display: flex; align-items: center;
+      justify-content: center; font-weight: 900; font-size: 18px; color: #fff;
+    }
+    header h1  { font-size: 1.2rem; font-weight: 700; }
+    header .sub{ font-size: .75rem; color: #a8a6a4; margin-top: 3px; }
+    .badge {
+      background: var(--lp); color: #fff;
+      padding: 6px 16px; border-radius: 20px;
+      font-size: .75rem; font-weight: 700; letter-spacing: 1px;
+    }
+
+    /* ── LAYOUT ───────────────────────────────────────────────── */
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 22px 28px; }
+
+    .sec {
+      font-size: .72rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 2px;
+      margin: 28px 0 12px; padding-bottom: 7px;
+      border-bottom: 2px solid var(--header);
+    }
+
+    /* ── METAS ATUAIS × ALVO ──────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .kpi {
+      background: var(--canvas); border-radius: 8px;
+      padding: 14px 18px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      border-left: 5px solid var(--blue);
+    }
+    .kpi.cp { border-left-color: var(--cp); }
+    .kpi.mp { border-left-color: var(--mp); }
+    .kpi.lp { border-left-color: var(--lp); }
+    .kpi-lbl { font-size: .67rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .8px; }
+    .kpi-row { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 3px; }
+    .kpi-now { font-size: 1.1rem; font-weight: 700; color: var(--cp); }
+    .kpi-arr { font-size: 1rem; color: var(--gray); }
+    .kpi-tgt { font-size: 1.1rem; font-weight: 800; color: var(--lp); }
+    .kpi-sub { font-size: .68rem; color: #aab; }
+
+    /* ── TIMELINE ─────────────────────────────────────────────── */
+    .timeline {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    .phase {
+      background: var(--canvas);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      overflow: hidden;
+    }
+    .phase-header {
+      padding: 14px 20px;
+      color: #fff; font-weight: 700;
+    }
+    .phase-header.cp { background: var(--cp); }
+    .phase-header.mp { background: var(--mp); }
+    .phase-header.lp { background: var(--lp); }
+    .phase-title { font-size: 1rem; letter-spacing: .3px; }
+    .phase-sub   { font-size: .75rem; opacity: .85; margin-top: 3px; }
+    .phase-body  { padding: 16px 20px; }
+
+    .action {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .action:last-child { border-bottom: none; }
+    .action-icon {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0; margin-top: 1px;
+    }
+    .cp .action-icon { background: #fde7e9; color: var(--cp); }
+    .mp .action-icon { background: #fef3cd; color: var(--mp); }
+    .lp .action-icon { background: #d4edda; color: var(--lp); }
+
+    .action-text strong { font-size: .82rem; display: block; color: var(--text); }
+    .action-text span   { font-size: .73rem; color: var(--gray); line-height: 1.4; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px; border-radius: 10px;
+      font-size: .65rem; font-weight: 700;
+      margin-top: 4px; margin-right: 4px;
+    }
+    .tag.area    { background: #eaf4fb; color: var(--blue); }
+    .tag.impact  { background: #eafaf1; color: var(--lp); }
+    .tag.urgency { background: #fdedec; color: var(--cp); }
+    .tag.med     { background: #fef9e7; color: var(--mp); }
+
+    /* ── CHARTS ───────────────────────────────────────────────── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media(max-width:900px){ .timeline,.g2,.g3,.kpi-grid{ grid-template-columns:1fr; } }
+
+    .card {
+      background: var(--canvas); border-radius: 8px;
+      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .card h3 {
+      font-size: .78rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card canvas { max-height: 260px; }
+
+    /* ── PRIORIDADE ───────────────────────────────────────────── */
+    .matrix {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+    }
+    .matrix-item {
+      background: var(--canvas); border-radius: 8px;
+      padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      border-top: 4px solid var(--blue);
+      font-size: .82rem;
+    }
+    .matrix-item.alta  { border-top-color: var(--cp); }
+    .matrix-item.media { border-top-color: var(--mp); }
+    .matrix-item.baixa { border-top-color: var(--lp); }
+    .matrix-item h4 { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); margin-bottom: 8px; }
+    .matrix-item li { margin-left: 14px; margin-bottom: 5px; line-height: 1.4; color: var(--text); }
+
+    /* ── COMPETITOR ALERT ────────────────────────────────────── */
+    .competitor-bar {
+      background: linear-gradient(90deg, #3d2100, #6d3c00);
+      border-left: 5px solid #f39c12;
+      padding: 11px 32px;
+      font-size: .85rem; color: #ffe8a0; font-weight: 600;
+      display: flex; align-items: center; gap: 14px;
+      letter-spacing: .2px;
+    }
+    .competitor-bar strong { color: #fff; }
+    .competitor-bar em { color: #ffd166; font-style: normal; font-weight: 700; }
+    .comp-intro {
+      background: linear-gradient(135deg, #3d2100, #6d3c00);
+      border-radius: 12px; padding: 18px 26px; margin-bottom: 18px;
+      color: #ffe8a0; font-size: .87rem; line-height: 1.7;
+      display: flex; align-items: flex-start; gap: 16px;
+    }
+    .comp-intro strong { color: #fff; }
+    .comp-intro em { color: #ffd166; font-style: normal; font-weight: 700; }
+    .comp-icon { font-size: 2rem; flex-shrink: 0; }
+
+    footer {
+      text-align: center; padding: 18px;
+      font-size: .72rem; color: #aab; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">↑</div>
+    <div>
+      <h1>MercadoMais S.A. — Plano de Recuperação</h1>
+      <div class="sub">Missão 5: Operação Retomada &nbsp;|&nbsp; Horizonte 12 meses</div>
+    </div>
+  </div>
+  <div class="badge">✓ OPERAÇÃO RETOMADA</div>
+</header>
+
+<div class="competitor-bar">
+  <span>🌐</span>
+  <span><strong>ALERTA COMPETITIVO — 27/06/2026:</strong> Concorrente internacional confirma entrada no Brasil · Risco de migração de clientes e guerra de preços · <em>Resposta estratégica: acelerar fidelização e ativar identidade nacional</em> 🇧🇷</span>
+</div>
+
+<div class="wrap">
+
+  <!-- Metas -->
+  <div class="sec">Metas: Situação Atual → Alvo</div>
+  <div class="kpi-grid">
+    <div class="kpi cp">
+      <div class="kpi-lbl">Taxa de Cancelamento</div>
+      <div class="kpi-row">
+        <span class="kpi-now">28,0%</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">10,0%</span>
+      </div>
+      <div class="kpi-sub">Meta em 3 meses</div>
+    </div>
+    <div class="kpi cp">
+      <div class="kpi-lbl">Taxa de Devolução</div>
+      <div class="kpi-row">
+        <span class="kpi-now">33,0%</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">12,0%</span>
+      </div>
+      <div class="kpi-sub">Meta em 3 meses</div>
+    </div>
+    <div class="kpi mp">
+      <div class="kpi-lbl">Resolução de Reclamações</div>
+      <div class="kpi-row">
+        <span class="kpi-now">55,0%</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">85,0%</span>
+      </div>
+      <div class="kpi-sub">Meta em 6 meses</div>
+    </div>
+    <div class="kpi mp">
+      <div class="kpi-lbl">Déficit Logístico</div>
+      <div class="kpi-row">
+        <span class="kpi-now">R$ 3.899</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">R$ 0</span>
+      </div>
+      <div class="kpi-sub">Meta em 6 meses</div>
+    </div>
+    <div class="kpi lp">
+      <div class="kpi-lbl">Satisfação do Cliente</div>
+      <div class="kpi-row">
+        <span class="kpi-now">5,8 / 10</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">8,0 / 10</span>
+      </div>
+      <div class="kpi-sub">Meta em 12 meses</div>
+    </div>
+    <div class="kpi lp">
+      <div class="kpi-lbl">ROI Médio Campanhas</div>
+      <div class="kpi-row">
+        <span class="kpi-now">−98,2%</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">+25,0%</span>
+      </div>
+      <div class="kpi-sub">Meta em 12 meses</div>
+    </div>
+    <div class="kpi lp">
+      <div class="kpi-lbl">Receita (crescimento)</div>
+      <div class="kpi-row">
+        <span class="kpi-now">R$ 132k</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">R$ 200k</span>
+      </div>
+      <div class="kpi-sub">Meta em 12 meses</div>
+    </div>
+    <div class="kpi lp">
+      <div class="kpi-lbl">Segmento Alto Valor</div>
+      <div class="kpi-row">
+        <span class="kpi-now">1 cliente</span>
+        <span class="kpi-arr">→</span>
+        <span class="kpi-tgt">10 clientes</span>
+      </div>
+      <div class="kpi-sub">Meta em 12 meses</div>
+    </div>
+  </div>
+
+  <!-- Plano por fase -->
+  <div class="sec">Roadmap de Ações por Fase</div>
+  <div class="timeline">
+
+    <!-- CURTO PRAZO -->
+    <div class="phase">
+      <div class="phase-header cp">
+        <div class="phase-title">⚡ Curto Prazo — 0 a 3 meses</div>
+        <div class="phase-sub">Ações emergenciais de contenção</div>
+      </div>
+      <div class="phase-body cp">
+        <div class="action">
+          <div class="action-icon">1</div>
+          <div class="action-text">
+            <strong>Auditoria de Cancelamentos e Devoluções</strong>
+            <span>Mapear as causas raiz dos 28% de cancelamentos e 33% de devoluções. Implementar protocolo de retenção de pedido antes da cancelação.</span>
+            <div><span class="tag urgency">Urgente</span><span class="tag area">Comercial</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">2</div>
+          <div class="action-text">
+            <strong>Suspensão e Revisão das Campanhas</strong>
+            <span>Pausar todas as campanhas com ROI abaixo de −90%. Redirecionar verba para canais com melhor conversão (dados da análise de interações).</span>
+            <div><span class="tag urgency">Urgente</span><span class="tag area">Marketing</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">3</div>
+          <div class="action-text">
+            <strong>Renegociação Logística Emergencial</strong>
+            <span>Total Express possui o maior déficit médio. Renegociar contratos priorizando Loggi (menor custo médio: R$ 70,58).</span>
+            <div><span class="tag urgency">Urgente</span><span class="tag area">Logística</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">4</div>
+          <div class="action-text">
+            <strong>Força-tarefa de Reclamações</strong>
+            <span>Criar mutirão para resolver backlog de reclamações abertas (45% não resolvidas). Priorizar categorias "Produto Errado" e "Defeituoso".</span>
+            <div><span class="tag urgency">Urgente</span><span class="tag area">Atendimento</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">5</div>
+          <div class="action-text">
+            <strong>Foco no Segmento Alto Valor</strong>
+            <span>Identificar e nutrir clientes do segmento "Alto Valor" (ticket médio R$ 22k) com atendimento personalizado e ofertas exclusivas.</span>
+            <div><span class="tag impact">Alto Impacto</span><span class="tag area">CRM</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉDIO PRAZO -->
+    <div class="phase">
+      <div class="phase-header mp">
+        <div class="phase-title">⚙ Médio Prazo — 3 a 6 meses</div>
+        <div class="phase-sub">Melhorias operacionais estruturais</div>
+      </div>
+      <div class="phase-body mp">
+        <div class="action">
+          <div class="action-icon">1</div>
+          <div class="action-text">
+            <strong>Implantação do Modelo de Previsão de Demanda</strong>
+            <span>Colocar em produção o modelo de regressão linear desenvolvido na Missão 3 para antecipar picos de venda e planejar estoque.</span>
+            <div><span class="tag med">Médio Prazo</span><span class="tag area">Analytics</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">2</div>
+          <div class="action-text">
+            <strong>Reestruturação de Campanhas com Dados</strong>
+            <span>Criar campanhas segmentadas por perfil de cliente (Alto Valor, Potencial, Baixo Engajamento). Testar canais A/B com metas de ROI positivo.</span>
+            <div><span class="tag med">Médio Prazo</span><span class="tag area">Marketing</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">3</div>
+          <div class="action-text">
+            <strong>Investimento Regional Estratégico</strong>
+            <span>PR e PE respondem por 48% da receita. Ampliar operação logística e marketing nessas regiões. Avaliar entrada em CE e PE com campanhas locais.</span>
+            <div><span class="tag med">Médio Prazo</span><span class="tag area">Expansão</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">4</div>
+          <div class="action-text">
+            <strong>SLA de Atendimento e Resolução</strong>
+            <span>Definir metas de tempo de resolução por prioridade. Treinar equipe de atendimento com foco em "Produto Errado" (categoria mais frequente).</span>
+            <div><span class="tag impact">Alto Impacto</span><span class="tag area">Atendimento</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">5</div>
+          <div class="action-text">
+            <strong>Otimização do Portfólio de Produtos</strong>
+            <span>Descontinuar produtos com margem abaixo da média. Ampliar estoque das categorias com maior margem real identificadas na análise.</span>
+            <div><span class="tag med">Médio Prazo</span><span class="tag area">Produtos</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LONGO PRAZO -->
+    <div class="phase">
+      <div class="phase-header lp">
+        <div class="phase-title">🎯 Longo Prazo — 6 a 12 meses</div>
+        <div class="phase-sub">Estratégias orientadas por dados</div>
+      </div>
+      <div class="phase-body lp">
+        <div class="action">
+          <div class="action-icon">1</div>
+          <div class="action-text">
+            <strong>Plataforma de Analytics em Tempo Real</strong>
+            <span>Implantar pipeline de dados contínuo com alertas automáticos para KPIs críticos (cancelamento, satisfação, ROI). Dashboard executivo atualizado diariamente.</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">Tecnologia</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">2</div>
+          <div class="action-text">
+            <strong>Programa de Fidelidade Orientado por Dados</strong>
+            <span>Usar segmentação K-Means para personalizar benefícios por cluster. Converter clientes "Potencial" em "Alto Valor" com ofertas dirigidas.</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">CRM</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">3</div>
+          <div class="action-text">
+            <strong>Modelo Preditivo de Churn e Abandono</strong>
+            <span>Desenvolver modelo para identificar clientes em risco de abandono antes que ocorra. Atuar preventivamente com ofertas de retenção.</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">Machine Learning</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">4</div>
+          <div class="action-text">
+            <strong>Revisão Completa da Estratégia Logística</strong>
+            <span>Com dados de 12 meses, renegociar todos os contratos de transportadora com base em desempenho. Avaliar fulfillment próprio nas regiões PR e PE.</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">Logística</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">5</div>
+          <div class="action-text">
+            <strong>Expansão Digital e Omnichannel</strong>
+            <span>Integrar dados de acesso ao site, campanhas e pedidos para criar jornada do cliente unificada. Reduzir abandono de carrinho (atualmente elevado em mobile).</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">Digital</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="sec">Projeção de Resultados e Prioridade das Ações</div>
+  <div class="g2">
+
+    <div class="card">
+      <h3>Evolução das Métricas Críticas — Atual vs Meta</h3>
+      <canvas id="chartMetas"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Projeção de Receita por Fase (R$)</h3>
+      <canvas id="chartReceita"></canvas>
+    </div>
+
+  </div>
+
+  <div class="g3">
+
+    <div class="card">
+      <h3>Distribuição de Esforço por Área</h3>
+      <canvas id="chartEsforco"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Investimento Estimado por Fase</h3>
+      <canvas id="chartInvestimento"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Impacto Esperado por Ação (score 0–10)</h3>
+      <canvas id="chartImpacto"></canvas>
+    </div>
+
+  </div>
+
+  <!-- Frente Estratégica Competitiva -->
+  <div class="sec">🇧🇷 Frente Estratégica — Resposta ao Concorrente Internacional</div>
+  <div class="comp-intro">
+    <div class="comp-icon">🌐</div>
+    <div>
+      <strong>Ameaça Confirmada — 27/06/2026:</strong> Um player internacional anunciou entrada no Brasil com potencial de gerar guerra de preços, migração de clientes sensíveis a custo e novos padrões de consumo. Este movimento torna urgente a aceleração das ações de recuperação interna e exige uma frente complementar de competitividade.<br><br>
+      <em>Nossa vantagem decisiva:</em> 67% dos brasileiros preferem marcas nacionais em condições equivalentes. Vamos ativar esse diferencial com as 3 ações abaixo, integradas ao plano de recuperação.
+    </div>
+  </div>
+  <div class="timeline">
+
+    <div class="phase">
+      <div class="phase-header cp">
+        <div class="phase-title">🏁 Identidade Nacional — Imediato</div>
+        <div class="phase-sub">Ativar o orgulho do "Compre Brasileiro"</div>
+      </div>
+      <div class="phase-body cp">
+        <div class="action">
+          <div class="action-icon">🇧🇷</div>
+          <div class="action-text">
+            <strong>Campanha "Somos Daqui"</strong>
+            <span>Lançar comunicação enfatizando a origem brasileira da empresa: atendimento em português, cultura regional, emprego local e logística ágil.</span>
+            <div><span class="tag urgency">Urgente</span><span class="tag area">Marketing</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">🔒</div>
+          <div class="action-text">
+            <strong>Lock-in dos Clientes Alto Valor</strong>
+            <span>Acionar os clientes do segmento "Alto Valor" com oferta exclusiva de fidelidade antes da chegada do concorrente ao mercado.</span>
+            <div><span class="tag urgency">Urgente</span><span class="tag area">CRM</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">📦</div>
+          <div class="action-text">
+            <strong>Divulgar SLA de Entrega Regional</strong>
+            <span>Posicionar nossa cobertura logística (PR, PE, SP, MG, RJ, RS) como diferencial intransponível. Concorrente levará anos para igualar.</span>
+            <div><span class="tag urgency">Urgente</span><span class="tag area">Logística</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header mp">
+        <div class="phase-title">⚙ Fidelização Acelerada — 3 a 6 meses</div>
+        <div class="phase-sub">Consolidar vínculo antes da chegada do rival</div>
+      </div>
+      <div class="phase-body mp">
+        <div class="action">
+          <div class="action-icon">🎁</div>
+          <div class="action-text">
+            <strong>Programa "MercadoMais Fidelidade"</strong>
+            <span>Clube de vantagens com cashback, frete progressivo e acesso antecipado a ofertas. Aumentar o custo de troca para o cliente antes de o concorrente chegar.</span>
+            <div><span class="tag med">Médio Prazo</span><span class="tag area">CRM</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">🏷️</div>
+          <div class="action-text">
+            <strong>Selos "100% Nacional"</strong>
+            <span>Criar certificação de produto nacional em categorias estratégicas. Parcerias com fornecedores brasileiros como argumento de qualidade e apoio ao empreendedor local.</span>
+            <div><span class="tag impact">Alto Impacto</span><span class="tag area">Produtos</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">📊</div>
+          <div class="action-text">
+            <strong>Precificação Dinâmica Defensiva</strong>
+            <span>Implantar modelo de preços responsivo à concorrência sem destruir margem — foco nos segmentos mais sensíveis a preço identificados via K-Means.</span>
+            <div><span class="tag med">Médio Prazo</span><span class="tag area">Comercial</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header lp">
+        <div class="phase-title">🏆 Campeão Nacional — 6 a 12 meses</div>
+        <div class="phase-sub">Posicionamento definitivo de mercado</div>
+      </div>
+      <div class="phase-body lp">
+        <div class="action">
+          <div class="action-icon">🧠</div>
+          <div class="action-text">
+            <strong>Inteligência Competitiva em Tempo Real</strong>
+            <span>Monitorar preços, disponibilidade e satisfação do concorrente continuamente. Usar analytics preditivo para antecipar movimentos e ajustar estratégia.</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">Analytics</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">📣</div>
+          <div class="action-text">
+            <strong>Rede de Embaixadores da Marca</strong>
+            <span>Selecionar clientes "Alto Valor" como embaixadores regionais. Criar comunidade de defensores que resistam ativamente à migração para o concorrente.</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">Marketing</span></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon">🇧🇷</div>
+          <div class="action-text">
+            <strong>Posicionamento "Brasil Compra do Brasil"</strong>
+            <span>Campanha anual consolidando a MercadoMais como referência nacional. Tornar-se a escolha consciente do brasileiro que valoriza o produto de sua terra.</span>
+            <div><span class="tag impact">Estratégico</span><span class="tag area">Marca</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Matriz de Prioridade -->
+  <div class="sec">Matriz de Prioridade das Ações</div>
+  <div class="matrix">
+    <div class="matrix-item alta">
+      <h4>🔴 Alta Prioridade — Imediato</h4>
+      <ul>
+        <li>Auditoria de cancelamentos e devoluções</li>
+        <li>Suspensão de campanhas com ROI negativo</li>
+        <li>Força-tarefa de reclamações</li>
+        <li>Renegociação logística emergencial</li>
+        <li style="color:#7d4500;font-weight:600">🌐 Campanha "Somos Daqui" — resposta imediata ao concorrente</li>
+        <li style="color:#7d4500;font-weight:600">🌐 Lock-in de clientes Alto Valor antes da chegada do rival</li>
+      </ul>
+    </div>
+    <div class="matrix-item media">
+      <h4>🟡 Média Prioridade — 3 a 6 meses</h4>
+      <ul>
+        <li>Implantação do modelo de previsão</li>
+        <li>Campanhas segmentadas por cluster</li>
+        <li>SLA de atendimento e resolução</li>
+        <li>Investimento em PR e PE</li>
+        <li style="color:#7d4500;font-weight:600">🌐 Programa MercadoMais Fidelidade + selos "100% Nacional"</li>
+        <li style="color:#7d4500;font-weight:600">🌐 Precificação dinâmica defensiva por segmento</li>
+      </ul>
+    </div>
+    <div class="matrix-item baixa">
+      <h4>🟢 Longo Prazo — 6 a 12 meses</h4>
+      <ul>
+        <li>Plataforma de analytics em tempo real</li>
+        <li>Modelo preditivo de churn</li>
+        <li>Programa de fidelidade personalizado</li>
+        <li>Estratégia omnichannel integrada</li>
+        <li style="color:#7d4500;font-weight:600">🌐 Inteligência competitiva contínua</li>
+        <li style="color:#7d4500;font-weight:600">🌐 Posicionamento "Brasil Compra do Brasil"</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  MercadoMais S.A. &bull; Hackathon Operação Retomada &bull; Missão 5 — Plano de Recuperação &bull; Junho 2026
+</footer>
+
+<script>
+const C = {
+  cp: '#e74c3c', mp: '#f39c12', lp: '#27ae60',
+  blue: '#2980b9', gray: '#bdc3c7'
+};
+
+// ── Metas atual vs alvo ───────────────────────────────────────────────────────
+new Chart(document.getElementById('chartMetas'), {
+  type: 'bar',
+  data: {
+    labels: ['Cancelamento %','Devolução %','Resolução Recl. %','Satisfação ×10','ROI Camp. +100'],
+    datasets: [
+      {
+        label: 'Situação Atual',
+        data: [28, 33, 55, 58, 1.8],
+        backgroundColor: C.cp, borderRadius: 4
+      },
+      {
+        label: 'Meta Final (12 m)',
+        data: [10, 12, 85, 80, 125],
+        backgroundColor: C.lp, borderRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
+// ── Projeção de Receita ───────────────────────────────────────────────────────
+new Chart(document.getElementById('chartReceita'), {
+  type: 'line',
+  data: {
+    labels: ['Atual','3 meses','6 meses','12 meses'],
+    datasets: [
+      {
+        label: 'Receita Projetada (R$)',
+        data: [132312, 150000, 172000, 200000],
+        borderColor: C.lp, backgroundColor: 'rgba(39,174,96,.1)',
+        fill: true, tension: 0.4, pointRadius: 6, borderWidth: 2.5,
+        pointBackgroundColor: [C.cp, C.mp, C.mp, C.lp]
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { ticks: { callback: v => 'R$ '+Math.round(v/1000)+'k' } }
+    }
+  }
+});
+
+// ── Esforço por área ──────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartEsforco'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Logística','Marketing','Atendimento','Analytics','Produtos','CRM'],
+    datasets: [{
+      data: [25, 20, 20, 15, 10, 10],
+      backgroundColor: [C.cp, C.mp, '#e67e22', C.blue, '#8e44ad', C.lp],
+      hoverOffset: 8, borderWidth: 2
+    }]
+  },
+  options: {
+    cutout: '55%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } } }
+  }
+});
+
+// ── Investimento por fase ─────────────────────────────────────────────────────
+new Chart(document.getElementById('chartInvestimento'), {
+  type: 'bar',
+  data: {
+    labels: ['Curto Prazo\n(0–3 m)', 'Médio Prazo\n(3–6 m)', 'Longo Prazo\n(6–12 m)'],
+    datasets: [{
+      label: 'Investimento Estimado (R$)',
+      data: [15000, 35000, 80000],
+      backgroundColor: [C.cp, C.mp, C.lp],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { ticks: { callback: v => 'R$ '+Math.round(v/1000)+'k' } } }
+  }
+});
+
+// ── Impacto esperado ──────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartImpacto'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'Suspender Campanhas','Auditoria Devoluções',
+      'Renegoc. Logística','Força-tarefa Recl.',
+      'Previsão de Demanda','Segmentação CRM',
+      'Analytics Real-time','Modelo Churn'
+    ],
+    datasets: [{
+      label: 'Impacto (0–10)',
+      data: [9, 9, 8, 8, 7, 8, 9, 7],
+      backgroundColor: [
+        C.cp,C.cp,C.cp,C.cp,
+        C.mp,C.mp,
+        C.lp,C.lp
+      ],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { min: 0, max: 10, ticks: { stepSize: 1 } } }
+  }
+});
+</script>
+</body>
+</html>
