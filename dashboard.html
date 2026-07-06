@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MercadoMais S.A. — Dashboard Executivo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:      #f0f2f5;
+      --canvas:  #ffffff;
+      --header:  #1a1a2e;
+      --accent:  #e94560;
+      --blue:    #2980b9;
+      --green:   #27ae60;
+      --red:     #e74c3c;
+      --orange:  #f39c12;
+      --gray:    #7f8c8d;
+      --text:    #2c3e50;
+      --border:  #dfe3e8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────────── */
+    header {
+      background: var(--header);
+      color: #fff;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 3px 10px rgba(0,0,0,.4);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 18px; color: #fff;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: .3px; }
+    header .sub { font-size: .75rem; color: #a8a6a4; margin-top: 3px; }
+    .badge {
+      background: var(--accent);
+      color: #fff; padding: 6px 16px;
+      border-radius: 20px;
+      font-size: .75rem; font-weight: 700; letter-spacing: 1px;
+    }
+
+    /* ── ALERT ───────────────────────────────────────────────── */
+    .alert-bar {
+      background: #fde7e9;
+      border-left: 4px solid var(--red);
+      padding: 9px 32px;
+      font-size: .82rem; color: var(--red); font-weight: 600;
+    }
+
+    /* ── LAYOUT ─────────────────────────────────────────────── */
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 20px 28px; }
+
+    .sec {
+      font-size: .72rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 2px;
+      margin: 26px 0 10px; padding-bottom: 7px;
+      border-bottom: 2px solid var(--header);
+    }
+
+    /* ── KPI CARDS ───────────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media(max-width:900px){ .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
+
+    .kpi {
+      background: var(--canvas);
+      border-radius: 8px;
+      padding: 14px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      border-left: 5px solid var(--blue);
+    }
+    .kpi.red    { border-left-color: var(--red); }
+    .kpi.orange { border-left-color: var(--orange); }
+    .kpi.green  { border-left-color: var(--green); }
+
+    .kpi-lbl { font-size: .67rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .8px; }
+    .kpi-val { font-size: 1.5rem; font-weight: 800; margin: 5px 0 3px; }
+    .kpi.red    .kpi-val { color: var(--red); }
+    .kpi.orange .kpi-val { color: var(--orange); }
+    .kpi.green  .kpi-val { color: var(--green); }
+    .kpi-sub { font-size: .68rem; color: #aab; }
+
+    /* ── CHART GRID ──────────────────────────────────────────── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .g3 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media(max-width:900px){ .g2,.g3{ grid-template-columns:1fr; } }
+
+    .card {
+      background: var(--canvas);
+      border-radius: 8px; padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .card h3 {
+      font-size: .78rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card canvas { max-height: 280px; }
+    .card.tall  canvas { max-height: 340px; }
+
+    /* ── COMPETITOR ALERT ────────────────────────────────────── */
+    .competitor-bar {
+      background: linear-gradient(90deg, #3d2100, #6d3c00);
+      border-left: 5px solid #f39c12;
+      padding: 11px 32px;
+      font-size: .85rem; color: #ffe8a0; font-weight: 600;
+      display: flex; align-items: center; gap: 14px;
+      letter-spacing: .2px;
+    }
+    .competitor-bar strong { color: #fff; }
+    .competitor-bar em { color: #ffd166; font-style: normal; font-weight: 700; }
+    .nat-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 11px; margin-top: 6px;
+    }
+    .nat-card {
+      border-radius: 8px; padding: 13px 15px;
+    }
+    .nat-card .nc-title {
+      font-size: .68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .9px;
+      margin-bottom: 6px;
+    }
+    .nat-card .nc-body { font-size: .78rem; line-height: 1.5; color: #2c3e50; }
+
+    /* ── FOOTER ──────────────────────────────────────────────── */
+    footer {
+      text-align: center; padding: 18px;
+      font-size: .72rem; color: #aab; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">M</div>
+    <div>
+      <h1>MercadoMais S.A. — Dashboard Executivo</h1>
+      <div class="sub">Operação Retomada &nbsp;|&nbsp; Junho 2026</div>
+    </div>
+  </div>
+  <div class="badge">⚠ CRISE ATIVA</div>
+</header>
+
+<div class="alert-bar">
+  ⚠ Atenção: Cancelamentos em 28% · Devoluções em 33% · ROI médio de campanhas: −98.2% · Taxa de resolução de reclamações: 55%
+</div>
+
+<div class="competitor-bar">
+  <span>🌐</span>
+  <span><strong>ALERTA COMPETITIVO — 27/06/2026:</strong> Concorrente internacional confirma entrada no mercado brasileiro · Risco de guerra de preços e migração de clientes · <em>Nossa resposta: ativar a fidelidade do consumidor brasileiro</em> 🇧🇷</span>
+</div>
+
+<div class="wrap">
+
+  <!-- KPIs -->
+  <div class="sec">Indicadores Estratégicos</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-lbl">Receita Efetiva</div>
+      <div class="kpi-val" style="color:var(--blue)">R$ 132.312</div>
+      <div class="kpi-sub">Pedidos entregues</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Ticket Médio</div>
+      <div class="kpi-val" style="color:var(--blue)">R$ 5.513</div>
+      <div class="kpi-sub">Por pedido entregue</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-lbl">Taxa de Cancelamento</div>
+      <div class="kpi-val">28,0%</div>
+      <div class="kpi-sub">Do total de pedidos</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-lbl">Taxa de Devolução</div>
+      <div class="kpi-val">33,0%</div>
+      <div class="kpi-sub">Do total de pedidos</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-lbl">Satisfação Média</div>
+      <div class="kpi-val">5,8 / 10</div>
+      <div class="kpi-sub">Score dos clientes</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-lbl">Resolução Reclamações</div>
+      <div class="kpi-val">55,0%</div>
+      <div class="kpi-sub">Reclamações resolvidas</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-lbl">Déficit Logístico</div>
+      <div class="kpi-val">R$ 3.899</div>
+      <div class="kpi-sub">Custo − frete cobrado</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-lbl">ROI Médio Campanhas</div>
+      <div class="kpi-val">−98,2%</div>
+      <div class="kpi-sub">Média de todas as campanhas</div>
+    </div>
+  </div>
+
+  <!-- Evolução Temporal -->
+  <div class="sec">Evolução Temporal</div>
+  <div class="card">
+    <h3>Receita Mensal (Pedidos Entregues)</h3>
+    <canvas id="chartTemporal"></canvas>
+  </div>
+
+  <!-- Regional + Status -->
+  <div class="sec">Comparativos Regionais</div>
+  <div class="g3">
+    <div class="card tall">
+      <h3>Receita Total por Estado</h3>
+      <canvas id="chartRegional"></canvas>
+    </div>
+    <div class="card">
+      <h3>Status dos Pedidos</h3>
+      <canvas id="chartStatus"></canvas>
+    </div>
+  </div>
+
+  <!-- Perdas e Riscos -->
+  <div class="sec">Perdas e Riscos</div>
+  <div class="g2">
+    <div class="card">
+      <h3>Custo Logístico vs Frete Cobrado por Transportadora</h3>
+      <canvas id="chartLogistica"></canvas>
+    </div>
+    <div class="card">
+      <h3>Reclamações por Categoria</h3>
+      <canvas id="chartReclamacoes"></canvas>
+    </div>
+  </div>
+
+  <!-- Modelos -->
+  <div class="sec">Resultados dos Modelos Analíticos</div>
+  <div class="g2">
+    <div class="card">
+      <h3>Segmentação de Clientes — K-Means (K = 3)</h3>
+      <canvas id="chartSegmentacao"></canvas>
+    </div>
+    <div class="card">
+      <h3>ROI por Campanha de Marketing</h3>
+      <canvas id="chartROI"></canvas>
+    </div>
+  </div>
+
+
+  <!-- Ameaça Competitiva -->
+  <div class="sec">🌐 Ameaça Competitiva — Resposta com Identidade Nacional</div>
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left-color:#f39c12">
+      <div class="kpi-lbl">Risco de Migração</div>
+      <div class="kpi-val" style="color:#f39c12">15–20%</div>
+      <div class="kpi-sub">Clientes sensíveis a preço em risco</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-lbl">Preferência por Nacional</div>
+      <div class="kpi-val">67%</div>
+      <div class="kpi-sub">Brasileiros preferem marca local</div>
+    </div>
+    <div class="kpi" style="border-left-color:#2980b9">
+      <div class="kpi-lbl">Vantagem Logística</div>
+      <div class="kpi-val" style="color:#2980b9">3–5×</div>
+      <div class="kpi-sub">Entrega mais rápida que importador</div>
+    </div>
+    <div class="kpi" style="border-left-color:#8e44ad">
+      <div class="kpi-lbl">Janela de Defesa</div>
+      <div class="kpi-val" style="color:#8e44ad">~36 m</div>
+      <div class="kpi-sub">Tempo para concorrente igualar estrutura</div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-top:14px">
+    <div class="card">
+      <h3>🇧🇷 Nossos Diferenciais vs Concorrente Internacional</h3>
+      <div class="nat-grid">
+        <div class="nat-card" style="background:#eafaf1;border-left:4px solid #27ae60">
+          <div class="nc-title" style="color:#27ae60">Identidade Nacional</div>
+          <div class="nc-body">"Somos daqui, como você." Cultura regional, datas brasileiras e atendimento humano em português — algo que nenhum importador reproduz rapidamente.</div>
+        </div>
+        <div class="nat-card" style="background:#eaf4fb;border-left:4px solid #2980b9">
+          <div class="nc-title" style="color:#2980b9">Logística Local</div>
+          <div class="nc-body">Rede ativa em PR, PE, SP, MG, RJ e RS. Entregas 3–5× mais rápidas que qualquer player internacional recém-chegado ao Brasil.</div>
+        </div>
+        <div class="nat-card" style="background:#fef9e7;border-left:4px solid #f39c12">
+          <div class="nc-title" style="color:#f39c12">Câmbio &amp; Impostos</div>
+          <div class="nc-body">Concorrente importador sofre variação cambial e impostos de importação. Operação 100% nacional garante previsibilidade e margem mais estável.</div>
+        </div>
+        <div class="nat-card" style="background:#f9f0ff;border-left:4px solid #8e44ad">
+          <div class="nc-title" style="color:#8e44ad">LGPD &amp; Soberania de Dados</div>
+          <div class="nc-body">Dados do consumidor gerenciados no Brasil com conformidade LGPD — diferencial regulatório e de confiança crescente para o cliente consciente.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Estimativa de Impacto Competitivo por Horizonte (sem vs com estratégia)</h3>
+      <canvas id="chartCompetitivo"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<footer>MercadoMais S.A. &bull; Hackathon Operação Retomada &bull; Confidencial &bull; Junho 2026</footer>
+
+<script>
+const C = {
+  blue:   '#2980b9', green:  '#27ae60',
+  red:    '#e74c3c', orange: '#f39c12',
+  purple: '#8e44ad', teal:   '#1abc9c', gray: '#7f8c8d'
+};
+
+// ── 1. Temporal ───────────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartTemporal'), {
+  type: 'line',
+  data: {
+    labels: ['Fev/22','Jun/22','Jul/22','Ago/22','Dez/22','Jan/23','Mar/23','Abr/23','Mai/23','Jun/23','Jul/23','Out/23','Nov/23','Jan/24','Fev/24','Mar/24','Ago/24','Dez/24'],
+    datasets: [{
+      label: 'Receita (R$)',
+      data: [5750.49,7436.39,4093.8,6208.26,4295.47,2839.29,3778.05,1747.84,14501.72,4546.22,2957.35,1458.84,10656.52,13769.69,8949.36,22057.41,7760.92,9505.25],
+      borderColor: C.blue, backgroundColor: 'rgba(41,128,185,.12)',
+      fill: true, tension: 0.4, pointRadius: 5, pointHoverRadius: 7, borderWidth: 2.5
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { font: { size: 11 }, maxRotation: 45 } },
+      y: { ticks: { callback: v => 'R$ '+v.toLocaleString('pt-BR') } }
+    }
+  }
+});
+
+// ── 2. Regional ───────────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartRegional'), {
+  type: 'bar',
+  data: {
+    labels: ['PR','PE','RJ','SP','MG','RS','GO','SC'],
+    datasets: [{
+      label: 'Receita (R$)',
+      data: [35613.50,27834.54,16768.12,13244.83,11276.38,10970.23,10600.21,6005.06],
+      backgroundColor: [
+        C.blue,C.blue,C.blue,C.blue,C.blue,C.blue,C.blue,C.blue
+      ].map((c,i)=> i===0?C.purple: i===1?C.blue : 'rgba(41,128,185,.55)'),
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { callback: v => 'R$'+Math.round(v/1000)+'k' } },
+      y: { ticks: { font: { size: 12, weight: 'bold' } } }
+    }
+  }
+});
+
+// ── 3. Status ─────────────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartStatus'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Devolvido','Cancelado','Entregue','Em transporte'],
+    datasets: [{
+      data: [33,28,24,15],
+      backgroundColor: [C.orange, C.red, C.green, C.blue],
+      hoverOffset: 8, borderWidth: 2
+    }]
+  },
+  options: {
+    cutout: '58%',
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 } } }
+    }
+  }
+});
+
+// ── 4. Logística ──────────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartLogistica'), {
+  type: 'bar',
+  data: {
+    labels: ['Azul Cargo','Correios','Jadlog','Loggi','Total Express'],
+    datasets: [
+      { label: 'Custo Logístico',  data: [79.12,84.41,77.74,70.58,89.22], backgroundColor: C.red,   borderRadius: 4 },
+      { label: 'Frete Cobrado',    data: [46.03,39.69,44.48,38.42,36.79], backgroundColor: C.green, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { ticks: { callback: v => 'R$ '+v } } }
+  }
+});
+
+// ── 5. Reclamações ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartReclamacoes'), {
+  type: 'bar',
+  data: {
+    labels: ['Produto Errado','Produto Defeituoso','Atraso na Entrega','Mau Atendimento','Cobrança Indevida'],
+    datasets: [{
+      label: 'Reclamações',
+      data: [7,6,3,2,2],
+      backgroundColor: ['#e74c3c','#e74c3c','#e67e22','#e67e22','#e67e22'],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: { stepSize: 1 } } }
+  }
+});
+
+// ── 6. Segmentação ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartSegmentacao'), {
+  type: 'bar',
+  data: {
+    labels: ['Alto Valor\n(1 cliente)','Potencial\n(4 clientes)','Baixo Engajamento\n(14 clientes)'],
+    datasets: [
+      {
+        label: 'Valor Monetário Médio (R$)',
+        data: [22057.41, 8560.69, 5429.48],
+        backgroundColor: [C.green, C.blue, C.red],
+        borderRadius: 6, yAxisID: 'y'
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { ticks: { callback: v => 'R$ '+v.toLocaleString('pt-BR') }, title: { display: true, text: 'Valor Médio (R$)' } }
+    }
+  }
+});
+
+// ── 7. ROI Campanhas ──────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartROI'), {
+  type: 'bar',
+  data: {
+    labels: ['Black Friday','Aniversário','Dia das Mães','Dia dos Pais','Verão','Cyber Monday','Volta às Aulas','Liquidação','Páscoa','Natal'],
+    datasets: [{
+      label: 'ROI (%)',
+      data: [-100.0,-100.0,-99.2,-98.9,-98.8,-98.3,-98.1,-96.9,-96.5,-95.3],
+      backgroundColor: '#e74c3c',
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        ticks: { callback: v => v+'%' },
+        min: -105, max: 0
+      },
+      y: { ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// ── 8. Competitivo ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartCompetitivo'), {
+  type: 'bar',
+  data: {
+    labels: ['Curto Prazo (0–6m)','Médio Prazo (6–18m)','Longo Prazo (18–36m)'],
+    datasets: [
+      {
+        label: 'Perda de clientes SEM estratégia (%)',
+        data: [10, 22, 35],
+        backgroundColor: C.red, borderRadius: 4
+      },
+      {
+        label: 'Retenção COM estratégia nacional (%)',
+        data: [90, 83, 78],
+        backgroundColor: C.green, borderRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { ticks: { callback: v => v+'%' }, max: 100 }
+    }
+  }
+});
+</script>
+</body>
+</html>
