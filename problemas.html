@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MercadoMais S.A. — Problemas Identificados</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:     #f0f2f5;
+      --canvas: #ffffff;
+      --header: #1a1a2e;
+      --text:   #2c3e50;
+      --gray:   #7f8c8d;
+      --border: #dfe3e8;
+      --red:    #e74c3c;
+      --orange: #e67e22;
+      --yellow: #f39c12;
+      --blue:   #2980b9;
+      --green:  #27ae60;
+      --purple: #8e44ad;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #2c0a0a 100%);
+      color: #fff; padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 14px rgba(0,0,0,.5);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 40px; height: 40px; background: var(--red);
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px;
+    }
+    header h1  { font-size: 1.2rem; font-weight: 700; }
+    header .sub{ font-size: .75rem; color: #c0b0b0; margin-top: 4px; }
+    .badge {
+      background: var(--red); color: #fff;
+      padding: 7px 18px; border-radius: 20px;
+      font-size: .75rem; font-weight: 700; letter-spacing: 1px;
+    }
+
+    /* ALERT */
+    .alert-bar {
+      background: #2c0a0a; color: #ff9999;
+      border-bottom: 2px solid var(--red);
+      padding: 10px 32px; font-size: .82rem; font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 22px 28px; }
+
+    .sec {
+      font-size: .72rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 2px;
+      margin: 28px 0 12px; padding-bottom: 7px;
+      border-bottom: 2px solid var(--header);
+    }
+
+    /* KPI STRIP */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px; margin-bottom: 4px;
+    }
+    .kpi {
+      background: var(--canvas); border-radius: 8px;
+      padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      border-top: 4px solid var(--red);
+      text-align: center;
+    }
+    .kpi-val { font-size: 1.5rem; font-weight: 800; color: var(--red); }
+    .kpi-lbl { font-size: .67rem; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .7px; margin-top: 4px; }
+
+    /* AREA CARDS */
+    .areas {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media(max-width:1000px){ .areas{ grid-template-columns: repeat(2,1fr); } }
+
+    .area-card {
+      background: var(--canvas); border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      overflow: hidden;
+    }
+    .area-head {
+      padding: 14px 18px;
+      color: #fff; font-weight: 700; font-size: .88rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .area-head .icon { font-size: 1.3rem; }
+    .area-body { padding: 14px 18px; }
+    .problem-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 7px 0; border-bottom: 1px dashed var(--border);
+      font-size: .8rem; color: var(--text); line-height: 1.4;
+    }
+    .problem-item:last-child { border-bottom: none; }
+    .problem-item::before { content: '▸'; color: var(--red); flex-shrink: 0; margin-top: 1px; }
+
+    /* SINTOMAS */
+    .sintomas-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+    }
+    .competitor-bar {
+      background: linear-gradient(90deg, #3d2100, #6d3c00);
+      border-left: 5px solid #f39c12;
+      padding: 11px 32px;
+      font-size: .85rem; color: #ffe8a0; font-weight: 600;
+      display: flex; align-items: center; gap: 14px;
+      letter-spacing: .2px;
+    }
+    .competitor-bar strong { color: #fff; }
+    .competitor-bar em { color: #ffd166; font-style: normal; font-weight: 700; }
+    .ameaca-box {
+      background: linear-gradient(135deg, #3d2100, #6b3800);
+      border-radius: 12px; padding: 22px 28px; margin-bottom: 4px;
+      display: flex; gap: 28px; align-items: flex-start;
+    }
+    .ameaca-text { flex: 1; color: #ffe8a0; font-size: .88rem; line-height: 1.7; }
+    .ameaca-text strong { color: #fff; }
+    .ameaca-text em { color: #ffd166; font-style: normal; font-weight: 700; }
+    .ameaca-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 290px; }
+    .ameaca-kpi { background: rgba(255,255,255,.09); border-radius: 8px; padding: 11px 14px; text-align: center; }
+    .ameaca-kpi .ak-val { font-size: 1.35rem; font-weight: 800; color: #ffd166; }
+    .ameaca-kpi .ak-lbl { font-size: .65rem; color: #ffcc70; text-transform: uppercase; letter-spacing: .7px; margin-top: 3px; }
+    .sintoma {
+      background: var(--canvas); border-radius: 8px;
+      padding: 16px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      border-bottom: 3px solid var(--red);
+    }
+    .sintoma .s-icon { font-size: 2rem; margin-bottom: 8px; }
+    .sintoma .s-title { font-size: .78rem; font-weight: 700; color: var(--header); margin-bottom: 4px; }
+    .sintoma .s-desc  { font-size: .72rem; color: var(--gray); line-height: 1.4; }
+
+    /* QUOTE */
+    .quote-wrap {
+      background: linear-gradient(135deg, #1a1a2e, #2d1b1b);
+      border-radius: 12px; padding: 30px 40px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.2);
+      position: relative;
+    }
+    .quote-mark {
+      font-size: 5rem; color: rgba(231,76,60,.3);
+      position: absolute; top: 10px; left: 24px;
+      line-height: 1; font-family: Georgia, serif;
+    }
+    .quote-text {
+      color: #e8e0e0; font-size: .95rem; line-height: 1.8;
+      font-style: italic; position: relative; z-index: 1;
+      padding-left: 20px;
+    }
+    .quote-text strong { color: #ff9999; font-style: normal; }
+    .quote-meta {
+      margin-top: 18px; padding-left: 20px;
+      font-size: .78rem; color: #a0908f; position: relative; z-index: 1;
+    }
+
+    /* CHARTS */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .card {
+      background: var(--canvas); border-radius: 8px;
+      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .card h3 {
+      font-size: .78rem; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card canvas { max-height: 260px; }
+
+    /* IMPACTO */
+    .impacto-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+    }
+    .impacto-item {
+      background: var(--canvas); border-radius: 8px;
+      padding: 16px 18px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .impacto-item h4 { font-size: .8rem; font-weight: 700; color: var(--header); margin-bottom: 10px; }
+    .impacto-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .impacto-label { font-size: .72rem; width: 130px; flex-shrink: 0; color: var(--text); }
+    .impacto-bar { height: 10px; border-radius: 5px; background: var(--red); }
+    .impacto-pct { font-size: .72rem; color: var(--gray); }
+
+    footer {
+      text-align: center; padding: 18px;
+      font-size: .72rem; color: #aab; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">⚠</div>
+    <div>
+      <h1>MercadoMais S.A. — Problemas Identificados</h1>
+      <div class="sub">Diagnóstico de Crise &nbsp;|&nbsp; Janeiro de 2026 &nbsp;|&nbsp; Operação Retomada</div>
+    </div>
+  </div>
+  <div class="badge">⚠ CRISE CONFIRMADA</div>
+</header>
+
+<div class="alert-bar">
+  ⚠ Relatório da Controladoria (Jan/2026): lucro líquido −18% · custos logísticos +27% · cancelamentos em alta · satisfação em queda · campanhas com ROI negativo
+</div>
+
+<div class="competitor-bar">
+  <span>🌐</span>
+  <span><strong>NOVA AMEAÇA — 27/06/2026:</strong> Concorrente internacional anuncia entrada no mercado brasileiro · Risco de guerra de preços, migração de clientes e novos padrões de consumo · <em>Defesa: fidelidade do brasileiro ao produto nacional</em> 🇧🇷</span>
+</div>
+
+<div class="wrap">
+
+  <!-- KPIs críticos -->
+  <div class="sec">Indicadores Críticos — Dados Reais</div>
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-val">28%</div>
+      <div class="kpi-lbl">Cancelamentos</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val">33%</div>
+      <div class="kpi-lbl">Devoluções</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" style="color:var(--orange)">5,8</div>
+      <div class="kpi-lbl">Satisfação /10</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val">55%</div>
+      <div class="kpi-lbl">Recl. Resolvidas</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val">−98%</div>
+      <div class="kpi-lbl">ROI Campanhas</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" style="color:var(--orange)">R$3,9k</div>
+      <div class="kpi-lbl">Déficit Logístico</div>
+    </div>
+  </div>
+
+  <!-- Áreas -->
+  <div class="sec">Problemas por Área</div>
+  <div class="areas">
+
+    <div class="area-card">
+      <div class="area-head" style="background:#c0392b">
+        <span class="icon">💰</span> Financeiro
+      </div>
+      <div class="area-body">
+        <div class="problem-item">Redução de 18% no lucro líquido</div>
+        <div class="problem-item">Custos logísticos +27%</div>
+        <div class="problem-item">Crescimento das despesas operacionais</div>
+        <div class="problem-item">Queda da margem de contribuição em diversas categorias</div>
+      </div>
+    </div>
+
+    <div class="area-card">
+      <div class="area-head" style="background:#e67e22">
+        <span class="icon">🛒</span> Comercial
+      </div>
+      <div class="area-body">
+        <div class="problem-item">Queda nas vendas em algumas regiões</div>
+        <div class="problem-item">Redução do ticket médio</div>
+        <div class="problem-item">Crescimento dos cancelamentos</div>
+        <div class="problem-item">Aumento das devoluções (33% dos pedidos)</div>
+      </div>
+    </div>
+
+    <div class="area-card">
+      <div class="area-head" style="background:#8e44ad">
+        <span class="icon">📣</span> Marketing
+      </div>
+      <div class="area-body">
+        <div class="problem-item">Aumento do custo de aquisição de clientes</div>
+        <div class="problem-item">Redução da taxa de conversão</div>
+        <div class="problem-item">Campanhas com ROI negativo (−98,2%)</div>
+        <div class="problem-item">Nenhuma campanha com retorno positivo</div>
+      </div>
+    </div>
+
+    <div class="area-card">
+      <div class="area-head" style="background:#2980b9">
+        <span class="icon">🎧</span> Atendimento
+      </div>
+      <div class="area-body">
+        <div class="problem-item">45% das reclamações sem resolução</div>
+        <div class="problem-item">Satisfação média de 5,8 / 10</div>
+        <div class="problem-item">Aumento do tempo médio de resolução</div>
+        <div class="problem-item">"Produto Errado" é a reclamação mais frequente</div>
+      </div>
+    </div>
+
+    <div class="area-card">
+      <div class="area-head" style="background:#27ae60">
+        <span class="icon">🚚</span> Logística
+      </div>
+      <div class="area-body">
+        <div class="problem-item">Déficit de R$ 3.899 (custo > frete cobrado)</div>
+        <div class="problem-item">Atrasos frequentes em todas as transportadoras</div>
+        <div class="problem-item">Total Express: maior custo médio (R$ 89,22)</div>
+        <div class="problem-item">Estoques desequilibrados por centro</div>
+      </div>
+    </div>
+
+    <div class="area-card" style="border: 2px solid #f39c12;">
+      <div class="area-head" style="background: linear-gradient(135deg,#3d2100,#7d4500)">
+        <span class="icon">🌐</span> Concorrência Internacional
+      </div>
+      <div class="area-body">
+        <div class="problem-item" style="color:#7d4500;font-weight:600">Player global anuncia entrada no Brasil em 27/06/2026</div>
+        <div class="problem-item">Risco de guerra de preços em categorias estratégicas</div>
+        <div class="problem-item">Possível migração de 15–20% dos clientes sensíveis a preço</div>
+        <div class="problem-item">Novos padrões de consumo e expectativas de entrega</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sintomas sistêmicos -->
+  <div class="sec">Sintomas Sistêmicos — Problemas Simultâneos em Todas as Áreas</div>
+  <div class="sintomas-grid">
+    <div class="sintoma">
+      <div class="s-icon">📈</div>
+      <div class="s-title">Custos em Alta</div>
+      <div class="s-desc">Logística, operacional e aquisição de clientes crescendo acima da receita</div>
+    </div>
+    <div class="sintoma">
+      <div class="s-icon">📉</div>
+      <div class="s-title">Queda de Produtividade</div>
+      <div class="s-desc">Campanhas ineficazes, atendimento lento e processos sem automação</div>
+    </div>
+    <div class="sintoma">
+      <div class="s-icon">😞</div>
+      <div class="s-title">Satisfação em Declínio</div>
+      <div class="s-desc">Score 5,8/10 com tendência de queda. 45% das reclamações sem solução</div>
+    </div>
+    <div class="sintoma">
+      <div class="s-icon">↩️</div>
+      <div class="s-title">Devoluções Crescentes</div>
+      <div class="s-desc">33% dos pedidos devolvidos, impactando diretamente margem e logística reversa</div>
+    </div>
+    <div class="sintoma">
+      <div class="s-icon">🏳️</div>
+      <div class="s-title">Perda de Mercado</div>
+      <div class="s-desc">Sem visão integrada, a empresa opera com indicadores isolados e decisões lentas</div>
+    </div>
+    <div class="sintoma" style="border-bottom-color:#f39c12">
+      <div class="s-icon">🌐</div>
+      <div class="s-title">Ameaça Competitiva</div>
+      <div class="s-desc">Concorrente internacional entra no Brasil fragilizando ainda mais a posição de mercado já comprometida</div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="sec">Evidências nos Dados</div>
+  <div class="g2">
+    <div class="card">
+      <h3>Distribuição dos Pedidos por Status</h3>
+      <canvas id="chartStatus"></canvas>
+    </div>
+    <div class="card">
+      <h3>Déficit Logístico por Transportadora (Custo vs Frete)</h3>
+      <canvas id="chartLogistica"></canvas>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>Reclamações por Categoria</h3>
+      <canvas id="chartReclamacoes"></canvas>
+    </div>
+    <div class="card">
+      <h3>ROI das Campanhas de Marketing (%)</h3>
+      <canvas id="chartROI"></canvas>
+    </div>
+  </div>
+
+  <!-- Ata do Conselho -->
+  <div class="sec">Reunião Extraordinária do Conselho — 12 de Março de 2026</div>
+  <div class="quote-wrap">
+    <div class="quote-mark">"</div>
+    <p class="quote-text">
+      Os resultados do último trimestre demonstram uma
+      <strong>deterioração consistente dos principais indicadores operacionais e financeiros</strong>.
+      Embora a empresa disponha de grandes volumes de dados provenientes de vendas, logística,
+      marketing, atendimento e plataformas digitais, ainda não conseguimos
+      <strong>transformá-los em informações estratégicas</strong> capazes de apoiar decisões de alto impacto.
+      <br><br>
+      Diante desse cenário, aprovamos a contratação de uma
+      <strong>consultoria especializada em análise de dados</strong> para identificar as causas da crise,
+      propor soluções baseadas em evidências e desenvolver modelos preditivos que auxiliem
+      a recuperação da competitividade da organização.
+    </p>
+    <div class="quote-meta">
+      — Ata da Reunião Extraordinária do Conselho Administrativo &nbsp;|&nbsp; 12 de março de 2026
+    </div>
+  </div>
+
+  <!-- Nova Ameaça Externa -->
+  <div class="sec">🌐 Nova Ameaça — Concorrente Internacional (27/06/2026)</div>
+  <div class="ameaca-box">
+    <div class="ameaca-text">
+      <strong>Um player global confirmou sua entrada no mercado brasileiro.</strong> O movimento pode gerar guerra de preços, migração de clientes e novos padrões de consumo que pressionam ainda mais os indicadores já críticos da MercadoMais S.A.
+      <br><br>
+      <em>Nossa defesa estratégica:</em> ativar a fidelidade natural do consumidor brasileiro ao produto nacional. Pesquisas indicam que <em>67% dos brasileiros preferem marcas nacionais</em> quando a qualidade é equivalente — e temos a logística, a cultura e o atendimento humano que nenhum importador pode replicar em curto prazo.
+    </div>
+    <div class="ameaca-kpis">
+      <div class="ameaca-kpi">
+        <div class="ak-val">15–20%</div>
+        <div class="ak-lbl">Clientes em Risco</div>
+      </div>
+      <div class="ameaca-kpi">
+        <div class="ak-val" style="color:#90ee90">67%</div>
+        <div class="ak-lbl">Preferem Nacional</div>
+      </div>
+      <div class="ameaca-kpi">
+        <div class="ak-val" style="color:#87ceeb">3–5×</div>
+        <div class="ak-lbl">Vantagem Logística</div>
+      </div>
+      <div class="ameaca-kpi">
+        <div class="ak-val" style="color:#dda0dd">~36m</div>
+        <div class="ak-lbl">Janela de Defesa</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Impacto estimado -->
+  <div class="sec">Severidade dos Problemas por Área</div>
+  <div class="impacto-grid">
+    <div class="impacto-item">
+      <h4>💰 Impacto Financeiro</h4>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Queda do lucro</span>
+        <div class="impacto-bar" style="width:72%;background:#c0392b"></div>
+        <span class="impacto-pct">−18%</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Custos logísticos</span>
+        <div class="impacto-bar" style="width:85%;background:#e74c3c"></div>
+        <span class="impacto-pct">+27%</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Déficit logístico</span>
+        <div class="impacto-bar" style="width:60%;background:#e74c3c"></div>
+        <span class="impacto-pct">R$ 3.899</span>
+      </div>
+    </div>
+    <div class="impacto-item">
+      <h4>🛒 Impacto Comercial</h4>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Cancelamentos</span>
+        <div class="impacto-bar" style="width:84%;background:#e74c3c"></div>
+        <span class="impacto-pct">28%</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Devoluções</span>
+        <div class="impacto-bar" style="width:99%;background:#c0392b"></div>
+        <span class="impacto-pct">33%</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">ROI campanhas</span>
+        <div class="impacto-bar" style="width:98%;background:#c0392b"></div>
+        <span class="impacto-pct">−98%</span>
+      </div>
+    </div>
+    <div class="impacto-item">
+      <h4>🎧 Impacto no Cliente</h4>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Satisfação (inv.)</span>
+        <div class="impacto-bar" style="width:42%;background:#e67e22"></div>
+        <span class="impacto-pct">5,8/10</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Recl. não resolvidas</span>
+        <div class="impacto-bar" style="width:45%;background:#e67e22"></div>
+        <span class="impacto-pct">45%</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Baixo engajamento</span>
+        <div class="impacto-bar" style="width:73%;background:#e74c3c"></div>
+        <span class="impacto-pct">74% clientes</span>
+      </div>
+    </div>
+    <div class="impacto-item" style="border:1.5px solid #f39c12">
+      <h4>🌐 Risco Competitivo Externo</h4>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Clientes em risco</span>
+        <div class="impacto-bar" style="width:20%;background:#f39c12"></div>
+        <span class="impacto-pct">15–20%</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Pressão de preços</span>
+        <div class="impacto-bar" style="width:80%;background:#e67e22"></div>
+        <span class="impacto-pct">Alta</span>
+      </div>
+      <div class="impacto-bar-wrap">
+        <span class="impacto-label">Janela de resposta</span>
+        <div class="impacto-bar" style="width:60%;background:#2980b9"></div>
+        <span class="impacto-pct">~36 meses</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  MercadoMais S.A. &bull; Hackathon Operação Retomada &bull; Diagnóstico de Crise &bull; Junho 2026
+</footer>
+
+<script>
+const C = { red:'#e74c3c', orange:'#e67e22', green:'#27ae60', blue:'#2980b9', purple:'#8e44ad' };
+
+new Chart(document.getElementById('chartStatus'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Devolvido (33)','Cancelado (28)','Entregue (24)','Em transporte (15)'],
+    datasets: [{
+      data: [33,28,24,15],
+      backgroundColor: [C.orange, C.red, C.green, C.blue],
+      hoverOffset: 8, borderWidth: 2
+    }]
+  },
+  options: {
+    cutout: '55%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 } } } }
+  }
+});
+
+new Chart(document.getElementById('chartLogistica'), {
+  type: 'bar',
+  data: {
+    labels: ['Azul Cargo','Correios','Jadlog','Loggi','Total Express'],
+    datasets: [
+      { label: 'Custo Médio (R$)',  data: [79.12,84.41,77.74,70.58,89.22], backgroundColor: C.red,   borderRadius: 4 },
+      { label: 'Frete Cobrado (R$)',data: [46.03,39.69,44.48,38.42,36.79], backgroundColor: C.green, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { ticks: { callback: v => 'R$ '+v } } }
+  }
+});
+
+new Chart(document.getElementById('chartReclamacoes'), {
+  type: 'bar',
+  data: {
+    labels: ['Produto Errado','Produto Defeituoso','Atraso Entrega','Mau Atendimento','Cobr. Indevida'],
+    datasets: [{
+      label: 'Quantidade',
+      data: [7,6,3,2,2],
+      backgroundColor: [C.red,C.red,C.orange,C.orange,C.orange],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: { stepSize: 1 } } }
+  }
+});
+
+new Chart(document.getElementById('chartROI'), {
+  type: 'bar',
+  data: {
+    labels: ['Black Friday','Aniversário','Dia das Mães','Dia dos Pais','Verão','Cyber Monday','Volta às Aulas','Liquidação','Páscoa','Natal'],
+    datasets: [{
+      label: 'ROI (%)',
+      data: [-100,-100,-99.2,-98.9,-98.8,-98.3,-98.1,-96.9,-96.5,-95.3],
+      backgroundColor: C.red, borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { min: -105, max: 0, ticks: { callback: v => v+'%' } } }
+  }
+});
+</script>
+</body>
+</html>
